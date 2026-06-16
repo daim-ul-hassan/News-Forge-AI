@@ -1,0 +1,1 @@
+"""AI agent registry placeholder."""

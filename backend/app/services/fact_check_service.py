@@ -1,0 +1,1 @@
+"""Fact check service placeholder."""

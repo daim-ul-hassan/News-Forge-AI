@@ -1,0 +1,1 @@
+"""News Scout Agent placeholder."""
