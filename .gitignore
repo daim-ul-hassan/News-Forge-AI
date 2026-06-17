@@ -9,3 +9,15 @@ __pycache__/
 *.egg-info/
 .idea/
 .vscode/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Frontend env
+apps/web/.env.local
+.env.local

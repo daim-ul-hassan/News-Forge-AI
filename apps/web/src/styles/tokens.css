@@ -1,0 +1,59 @@
+/* Forge Bold design tokens */
+
+:root {
+  --background: #f8f7f4;
+  --foreground: #121214;
+  --card: #ffffff;
+  --card-foreground: #121214;
+  --popover: #ffffff;
+  --popover-foreground: #121214;
+  --primary: #e85d04;
+  --primary-foreground: #ffffff;
+  --secondary: #0891b2;
+  --secondary-foreground: #ffffff;
+  --muted: #e8e6e1;
+  --muted-foreground: #5c5c63;
+  --accent: #fff4eb;
+  --accent-foreground: #121214;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #d4d2cc;
+  --input: #d4d2cc;
+  --ring: rgba(232, 93, 4, 0.4);
+  --radius: 0.5rem;
+  --sidebar-width: 16rem;
+  --sidebar-width-collapsed: 4rem;
+  --header-height: 3.5rem;
+  --forge-glow: rgba(232, 93, 4, 0.15);
+  --forge-cyan-glow: rgba(8, 145, 178, 0.12);
+}
+
+.dark {
+  --background: #0a0a0b;
+  --foreground: #f4f4f5;
+  --card: #121214;
+  --card-foreground: #f4f4f5;
+  --popover: #121214;
+  --popover-foreground: #f4f4f5;
+  --primary: #ff6b1a;
+  --primary-foreground: #0a0a0b;
+  --secondary: #22d3ee;
+  --secondary-foreground: #0a0a0b;
+  --muted: #1c1c1f;
+  --muted-foreground: #a1a1aa;
+  --accent: #0f1f24;
+  --accent-foreground: #f4f4f5;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #2a2a2e;
+  --input: #2a2a2e;
+  --ring: rgba(34, 211, 238, 0.4);
+  --forge-glow: rgba(255, 107, 26, 0.2);
+  --forge-cyan-glow: rgba(34, 211, 238, 0.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --effects-enabled: 0;
+  }
+}
