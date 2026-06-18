@@ -42,7 +42,7 @@ export function AppPageScaffold({
   const pageId = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
   return (
-    <div className="space-y-8">
+    <div className="min-w-0 space-y-8 overflow-x-hidden">
       <PageHeader
         title={title}
         description={description}
@@ -53,16 +53,16 @@ export function AppPageScaffold({
         }
       />
 
-      <div className="app-panel rounded-lg p-4 sm:p-5" role="note" aria-label="Integration notice">
+      <div className="app-panel overflow-hidden rounded-lg p-4 sm:p-5" role="note" aria-label="Integration notice">
         <div className="flex gap-3">
           <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-primary/25 bg-primary/10 text-primary">
             <Clock3 className="h-4 w-4" aria-hidden />
           </span>
-          <div>
+          <div className="min-w-0">
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
               Backend integration pending
             </p>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">{notice}</p>
+            <p className="mt-1 break-words text-sm leading-6 text-muted-foreground">{notice}</p>
           </div>
         </div>
       </div>
@@ -78,7 +78,7 @@ export function AppPageScaffold({
             </p>
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {cards.map((card) => (
             <PlaceholderFeatureCard key={card.title} card={card} />
           ))}
@@ -96,7 +96,7 @@ export function AppPageScaffold({
             Empty, loading, and error examples are visible now so future integrations have a clear UX target.
           </p>
         </div>
-        <div className="grid gap-4 xl:grid-cols-3">
+        <div className="grid min-w-0 gap-4 xl:grid-cols-3">
           <StateCard title="Loading state" icon={Clock3}>
             <LoadingState rows={2} />
           </StateCard>
@@ -127,7 +127,7 @@ function PlaceholderFeatureCard({ card }: { card: PlaceholderCard }) {
       title={card.title}
       description={card.description}
       meta={card.label}
-      className="app-panel group min-h-[210px] bg-card/70"
+      className="app-panel group min-h-[210px] overflow-hidden bg-card/70"
       footer={
         <div className="flex items-center justify-between gap-3">
           <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">TODO</span>
@@ -164,7 +164,7 @@ function StateCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="app-panel rounded-lg p-5">
+    <div className="app-panel overflow-hidden rounded-lg p-5">
       <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
         <Icon className="h-4 w-4" aria-hidden />
         <h3>{title}</h3>

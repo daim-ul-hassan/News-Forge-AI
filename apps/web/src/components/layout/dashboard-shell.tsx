@@ -36,10 +36,10 @@ export function DashboardShell({ children }: DashboardShellProps) {
     <div className="flex h-screen overflow-hidden">
       <AppSidebar />
       <MobileNav />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <AuthBanner />
         <AppHeader />
-        <main id="main-content" className="flex-1 overflow-y-auto p-4 lg:p-6">
+        <main id="main-content" className="flex-1 overflow-x-hidden overflow-y-auto p-4 lg:p-6">
           {children}
         </main>
       </div>

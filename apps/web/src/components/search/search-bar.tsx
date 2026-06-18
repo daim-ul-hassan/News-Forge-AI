@@ -3,8 +3,8 @@
 import { Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
-import { useUiStore } from "@/stores/ui-store";
 import { cn } from "@/lib/utils";
+import { useUiStore } from "@/stores/ui-store";
 
 interface SearchBarProps {
   className?: string;
@@ -32,7 +32,7 @@ export function SearchBar({ className, placeholder = "Search or jump to..." }: S
         aria-label="Open command palette"
       />
       <kbd className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground sm:inline-block">
-        ⌘K
+        Ctrl K
       </kbd>
     </div>
   );
