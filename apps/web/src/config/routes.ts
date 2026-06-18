@@ -17,11 +17,13 @@ export const appRoutes = {
   settings: "/settings",
 } as const;
 
-// TODO: /fact-check — reserved for future implementation
-// TODO: /voice — reserved for future implementation
-// TODO: /image-analysis — reserved for future implementation
-// TODO: /login — reserved for future auth
-// TODO: /signup — reserved for future auth
+export const authRoutes = {
+  signIn: "/sign-in",
+  signUp: "/sign-up",
+} as const;
+
+export type AuthRoute = (typeof authRoutes)[keyof typeof authRoutes];
+
 
 export type MarketingRoute = (typeof marketingRoutes)[keyof typeof marketingRoutes];
 export type AppRoute = (typeof appRoutes)[keyof typeof appRoutes];
@@ -29,4 +31,5 @@ export type AppRoute = (typeof appRoutes)[keyof typeof appRoutes];
 export const allRoutes = {
   ...marketingRoutes,
   ...appRoutes,
+  ...authRoutes,
 } as const;

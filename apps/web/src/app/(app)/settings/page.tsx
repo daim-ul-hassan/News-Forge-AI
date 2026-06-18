@@ -1,13 +1,14 @@
 "use client";
 
 import type { PlaceholderCard } from "@/components/layout/app-page-scaffold";
-import { Bell, MonitorCog, Palette, Settings2, Shield } from "lucide-react";
+import { Bell, MonitorCog, Palette, Settings2, Shield, User } from "lucide-react";
 
 import { AppPageScaffold } from "@/components/layout/app-page-scaffold";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePreferencesStore } from "@/stores/preferences-store";
+import { useAuthStore } from "@/stores/auth-store";
 
 const cards = [
   {
@@ -33,6 +34,7 @@ const cards = [
 
 export default function SettingsPage() {
   const { density, effectsEnabled, setDensity, setEffectsEnabled } = usePreferencesStore();
+  const { user } = useAuthStore();
 
   return (
     <AppPageScaffold
@@ -48,6 +50,7 @@ export default function SettingsPage() {
       <Tabs defaultValue="general" className="app-panel rounded-lg p-4 sm:p-5">
         <TabsList className="grid h-auto w-full grid-cols-1 sm:inline-flex sm:w-auto">
           <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
@@ -61,6 +64,37 @@ export default function SettingsPage() {
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               TODO: Account-backed preferences are not connected yet. Local display controls remain available in this preview.
             </p>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="profile" className="mt-6">
+          <div className="space-y-5 rounded-lg border border-border/80 bg-background/35 p-5">
+            <div className="flex items-center gap-2">
+              <User className="h-5 w-5 text-primary" aria-hidden />
+              <h2 className="text-lg font-semibold">Profile details</h2>
+            </div>
+            {user ? (
+              <div className="space-y-4 pt-2">
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">Name</h3>
+                  <p className="mt-1 font-medium">{user.user_metadata?.full_name || "User"}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">Email</h3>
+                  <p className="mt-1 font-medium">{user.email}</p>
+                </div>
+                <Separator />
+                <div>
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    TODO: Profile editing and password changes will be enabled once backend endpoints are fully mapped.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                No active user session found. Please sign in to view your profile.
+              </p>
+            )}
           </div>
         </TabsContent>
 

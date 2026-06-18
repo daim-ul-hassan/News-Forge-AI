@@ -4,6 +4,7 @@ import { Menu } from "lucide-react";
 
 import { BreadcrumbNav } from "@/components/navigation/breadcrumb-nav";
 import { SearchBar } from "@/components/search/search-bar";
+import { AppUserNav } from "@/components/layout/app-user-nav";
 import { ThemeSwitcher } from "@/components/theme/theme-switcher";
 import { Button } from "@/components/ui/button";
 import { useUiStore } from "@/stores/ui-store";
@@ -26,6 +27,7 @@ export function AppHeader() {
       <div className="ml-auto flex items-center gap-2">
         <SearchBar className="hidden w-64 md:block lg:w-72" />
         <ThemeSwitcher />
+        <AppUserNav />
       </div>
     </header>
   );

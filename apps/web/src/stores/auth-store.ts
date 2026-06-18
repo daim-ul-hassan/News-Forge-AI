@@ -1,26 +1,37 @@
 import { create } from "zustand";
+import { User } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
 
 export type AuthStatus = "unknown" | "authenticated" | "unauthenticated";
 
 interface AuthState {
   status: AuthStatus;
-  user: null;
-  signIn: () => void;
-  signOut: () => void;
-  checkSession: () => void;
+  user: User | null;
+  setUser: (user: User | null) => void;
+  signOut: () => Promise<void>;
+  checkSession: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  status: "unauthenticated",
+  status: "unknown",
   user: null,
-  // TODO: wire to /api/v1/auth
-  signIn: () => {
-    set({ status: "unauthenticated" });
+  setUser: (user) => {
+    set({
+      user,
+      status: user ? "authenticated" : "unauthenticated",
+    });
   },
-  signOut: () => {
+  signOut: async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
     set({ status: "unauthenticated", user: null });
   },
-  checkSession: () => {
-    set({ status: "unauthenticated", user: null });
+  checkSession: async () => {
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    set({
+      user: session?.user || null,
+      status: session?.user ? "authenticated" : "unauthenticated",
+    });
   },
 }));
