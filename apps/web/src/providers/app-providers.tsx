@@ -10,7 +10,7 @@ import { QueryProvider } from "@/providers/query-provider";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
-    <NextThemesProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+    <NextThemesProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
       <QueryProvider>
         <ModalProvider>
           <EffectsProvider>

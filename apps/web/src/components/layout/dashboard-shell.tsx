@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle } from "lucide-react";
+import { Info } from "lucide-react";
 
 import { AppHeader } from "@/components/layout/app-header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
@@ -22,8 +22,11 @@ function AuthBanner() {
       className="flex items-center gap-2 border-b border-primary/20 bg-primary/5 px-4 py-2 text-sm text-foreground"
       role="status"
     >
-      <AlertTriangle className="h-4 w-4 shrink-0 text-primary" aria-hidden />
-      <span>Sign in required — TODO. Backend auth integration pending.</span>
+      <Info className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+      <span>
+        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">TODO</span>{" "}
+        Developer preview. Backend integration pending.
+      </span>
     </div>
   );
 }

@@ -43,7 +43,7 @@
   h2,
   h3,
   h4 {
-    @apply font-mono tracking-tight;
+    @apply tracking-tight;
   }
 }
 
@@ -57,11 +57,22 @@
   }
 
   .forge-glow-hover {
-    transition: box-shadow 0.2s ease;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
   }
 
   .forge-glow-hover:hover {
+    border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
     box-shadow: 0 0 0 1px var(--primary), 0 8px 32px var(--forge-glow);
+    transform: translateY(-1px);
+  }
+
+  .app-panel {
+    background: color-mix(in srgb, var(--card) 72%, transparent);
+    border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+    box-shadow: 0 14px 48px rgba(0, 0, 0, 0.18);
   }
 
   .marketing-gradient {

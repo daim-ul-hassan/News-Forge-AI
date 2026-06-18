@@ -24,7 +24,7 @@ interface DataTableProps<T> {
 export function DataTable<T extends Record<string, unknown>>({
   columns,
   data,
-  emptyMessage = "No data available — TODO",
+  emptyMessage = "No data available. TODO.",
   className,
 }: DataTableProps<T>) {
   return (
