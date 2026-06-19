@@ -1,9 +1,8 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import type { Draft, DraftFormat } from "@/types/drafts.types";
 
 function generateId() {
-  return Math.random().toString(36).slice(2, 10);
+  return crypto.randomUUID();
 }
 
 function wordCount(text: string): number {
@@ -14,6 +13,10 @@ interface DraftsStore {
   drafts: Draft[];
   activeDraftId: string | null;
   lastSavedAt: string | null;
+  syncReady: boolean;
+
+  hydrate: (drafts: Draft[]) => void;
+  setSyncReady: (ready: boolean) => void;
 
   createDraft: (title: string, format: DraftFormat) => string;
   updateDraft: (id: string, partial: Partial<Pick<Draft, "title" | "content" | "status">>) => void;
@@ -22,64 +25,68 @@ interface DraftsStore {
   activeDraft: () => Draft | undefined;
 }
 
-export const useDraftsStore = create<DraftsStore>()(
-  persist(
-    (set, get) => ({
-      drafts: [],
-      activeDraftId: null,
-      lastSavedAt: null,
+export const useDraftsStore = create<DraftsStore>()((set, get) => ({
+  drafts: [],
+  activeDraftId: null,
+  lastSavedAt: null,
+  syncReady: false,
 
-      createDraft: (title, format) => {
-        const now = new Date().toISOString();
-        const id = generateId();
-        const draft: Draft = {
-          id,
-          title,
-          content: "",
-          format,
-          status: "draft",
-          wordCount: 0,
-          createdAt: now,
-          updatedAt: now,
-        };
-        set((state) => ({
-          drafts: [draft, ...state.drafts],
-          activeDraftId: id,
-        }));
-        return id;
-      },
+  hydrate: (drafts) =>
+    set((state) => ({
+      drafts,
+      activeDraftId: state.activeDraftId ?? drafts[0]?.id ?? null,
+    })),
 
-      updateDraft: (id, partial) => {
-        const now = new Date().toISOString();
-        set((state) => ({
-          drafts: state.drafts.map((d) =>
-            d.id === id
-              ? {
-                  ...d,
-                  ...partial,
-                  wordCount: partial.content !== undefined ? wordCount(partial.content) : d.wordCount,
-                  updatedAt: now,
-                }
-              : d,
-          ),
-          lastSavedAt: now,
-        }));
-      },
+  setSyncReady: (ready) => set({ syncReady: ready }),
 
-      deleteDraft: (id) => {
-        set((state) => ({
-          drafts: state.drafts.filter((d) => d.id !== id),
-          activeDraftId: state.activeDraftId === id ? null : state.activeDraftId,
-        }));
-      },
+  createDraft: (title, format) => {
+    const now = new Date().toISOString();
+    const id = generateId();
+    const draft: Draft = {
+      id,
+      title,
+      content: "",
+      format,
+      status: "draft",
+      wordCount: 0,
+      createdAt: now,
+      updatedAt: now,
+    };
+    set((state) => ({
+      drafts: [draft, ...state.drafts],
+      activeDraftId: id,
+    }));
+    return id;
+  },
 
-      setActiveDraft: (id) => set({ activeDraftId: id }),
+  updateDraft: (id, partial) => {
+    const now = new Date().toISOString();
+    set((state) => ({
+      drafts: state.drafts.map((d) =>
+        d.id === id
+          ? {
+              ...d,
+              ...partial,
+              wordCount: partial.content !== undefined ? wordCount(partial.content) : d.wordCount,
+              updatedAt: now,
+            }
+          : d,
+      ),
+      lastSavedAt: now,
+    }));
+  },
 
-      activeDraft: () => {
-        const { drafts, activeDraftId } = get();
-        return drafts.find((d) => d.id === activeDraftId);
-      },
-    }),
-    { name: "nf-drafts" },
-  ),
-);
+  deleteDraft: (id) => {
+    set((state) => ({
+      drafts: state.drafts.filter((d) => d.id !== id),
+      activeDraftId: state.activeDraftId === id ? null : state.activeDraftId,
+    }));
+  },
+
+  setActiveDraft: (id) => set({ activeDraftId: id }),
+
+  activeDraft: () => {
+    const { drafts, activeDraftId } = get();
+    return drafts.find((d) => d.id === activeDraftId);
+  },
+}));

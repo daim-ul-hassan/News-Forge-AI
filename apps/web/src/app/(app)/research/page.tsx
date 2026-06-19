@@ -3,13 +3,12 @@
 import { Clock, FileSearch, Plus, Search, Tag, Trash2 } from "lucide-react";
 import { useState } from "react";
 
-import { ErrorState } from "@/components/feedback/error-state";
 import { LoadingState } from "@/components/feedback/loading-state";
 import { PageHeader } from "@/components/feedback/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { usePageState } from "@/hooks/use-page-state";
 import { useResearchStore } from "@/stores/research-store";
+import { useAuthStore } from "@/stores/auth-store";
 import { cn } from "@/lib/utils";
 
 function formatDate(iso: string) {
@@ -17,9 +16,10 @@ function formatDate(iso: string) {
 }
 
 export default function ResearchPage() {
-  const { notes, history, searchQuery, addNote, deleteNote, setSearch, filteredNotes, addHistory, clearHistory } =
+  const { notes, history, searchQuery, syncReady, addNote, deleteNote, setSearch, filteredNotes, addHistory, clearHistory } =
     useResearchStore();
-  const { isLoading, error } = usePageState(600);
+  const user = useAuthStore((s) => s.user);
+  const isLoading = !!user && !syncReady;
 
   const [topic, setTopic] = useState("");
   const [content, setContent] = useState("");
@@ -102,11 +102,6 @@ export default function ResearchPage() {
         <div className="mt-8">
           <LoadingState rows={3} />
         </div>
-      ) : error ? (
-        <ErrorState
-          title="Failed to load research"
-          description="There was an error connecting to the research database."
-        />
       ) : (
         <div className="grid gap-6 lg:grid-cols-[1fr_240px]">
           {/* Notes column */}

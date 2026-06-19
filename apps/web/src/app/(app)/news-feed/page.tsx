@@ -14,7 +14,6 @@ import { LoadingState } from "@/components/feedback/loading-state";
 import { PageHeader } from "@/components/feedback/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { usePageState } from "@/hooks/use-page-state";
 import { useNewsFeed } from "@/hooks/use-news-feed";
 import { cn } from "@/lib/utils";
 import type { ArticleCategory } from "@/types/news.types";
@@ -46,11 +45,13 @@ export default function NewsFeedPage() {
     page,
     totalPages,
     total,
+    isLoading,
+    error,
+    refetch,
     setSearch,
     setCategory,
     goToPage,
   } = useNewsFeed();
-  const { isLoading, error } = usePageState(600);
 
   return (
     <div className="min-w-0 space-y-6 overflow-x-hidden">
@@ -71,7 +72,8 @@ export default function NewsFeedPage() {
       ) : error ? (
         <ErrorState
           title="Failed to load news feed"
-          description="There was an error connecting to the ingestion service."
+          description={error}
+          onRetry={() => refetch()}
         />
       ) : (
         <>

@@ -8,18 +8,21 @@ import { EffectsProvider } from "@/components/effects/effects-provider";
 import { ModalProvider } from "@/components/modals/modal-provider";
 import { QueryProvider } from "@/providers/query-provider";
 import { AuthProvider } from "@/providers/auth-provider";
+import { DataSyncProvider } from "@/providers/data-sync-provider";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <NextThemesProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
       <QueryProvider>
         <AuthProvider>
-          <ModalProvider>
-            <EffectsProvider>
-              {children}
-              <Toaster richColors closeButton position="top-right" />
-            </EffectsProvider>
-          </ModalProvider>
+          <DataSyncProvider>
+            <ModalProvider>
+              <EffectsProvider>
+                {children}
+                <Toaster richColors closeButton position="top-right" />
+              </EffectsProvider>
+            </ModalProvider>
+          </DataSyncProvider>
         </AuthProvider>
       </QueryProvider>
     </NextThemesProvider>

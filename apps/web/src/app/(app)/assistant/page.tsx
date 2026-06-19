@@ -3,13 +3,12 @@
 import { Bot, Clock, Send, Trash2, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-import { ErrorState } from "@/components/feedback/error-state";
 import { LoadingState } from "@/components/feedback/loading-state";
 import { PageHeader } from "@/components/feedback/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { usePageState } from "@/hooks/use-page-state";
 import { useAssistantStore } from "@/stores/assistant-store";
+import { useAuthStore } from "@/stores/auth-store";
 import { cn } from "@/lib/utils";
 
 function formatTime(iso: string) {
@@ -32,8 +31,10 @@ function TypingIndicator() {
 }
 
 export default function AssistantPage() {
-  const { conversation, isTyping, sendMessage, clearConversation } = useAssistantStore();
-  const { isLoading, error } = usePageState(600);
+  const { conversation, isTyping, syncReady, error, sendMessage, clearConversation, clearError } =
+    useAssistantStore();
+  const user = useAuthStore((s) => s.user);
+  const isLoading = !!user && !syncReady;
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -42,11 +43,13 @@ export default function AssistantPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [conversation.messages, isTyping]);
 
-  const handleSend = (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
-    sendMessage(input.trim());
+    if (!input.trim() || isTyping) return;
+    const message = input.trim();
     setInput("");
+    clearError();
+    await sendMessage(message);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -77,22 +80,18 @@ export default function AssistantPage() {
         }
       />
 
-      {/* AI status notice */}
-      <div className="mt-6 flex items-center gap-2 rounded-md border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 text-xs text-amber-400">
-        <Bot className="h-3.5 w-3.5 shrink-0" aria-hidden />
-        {/* TODO: Remove this banner once AI backend is connected */}
-        AI responses are not yet connected. This is a conversation architecture preview.
-      </div>
+      {/* Error notice */}
+      {error && (
+        <div className="mt-6 flex items-center gap-2 rounded-md border border-destructive/20 bg-destructive/5 px-4 py-2.5 text-xs text-destructive">
+          <Bot className="h-3.5 w-3.5 shrink-0" aria-hidden />
+          {error}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="mt-8 flex-1">
           <LoadingState rows={3} />
         </div>
-      ) : error ? (
-        <ErrorState
-          title="Failed to load assistant"
-          description="There was an error connecting to the AI backend."
-        />
       ) : (
         <>
           {/* Messages */}

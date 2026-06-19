@@ -5,6 +5,11 @@ import type { Opportunity, OpportunityFilters, OpportunitySortKey, OpportunityFi
 interface OpportunitiesState {
   savedIds: Set<string>;
   filters: OpportunityFilters;
+  syncReady: boolean;
+
+  hydrateSavedIds: (ids: Set<string>) => void;
+  setSyncReady: (ready: boolean) => void;
+
   toggleSaved: (id: string) => void;
   isSaved: (id: string) => boolean;
   setSearch: (search: string) => void;
@@ -23,6 +28,11 @@ export const useOpportunitiesStore = create<OpportunitiesState>()(
         category: "all",
         sort: "score",
       },
+      syncReady: false,
+
+      hydrateSavedIds: (ids) => set({ savedIds: ids }),
+
+      setSyncReady: (ready) => set({ syncReady: ready }),
 
       toggleSaved: (id) =>
         set((state) => {
@@ -49,7 +59,6 @@ export const useOpportunitiesStore = create<OpportunitiesState>()(
 
         let result = [...opportunities];
 
-        // Text search
         if (search.trim()) {
           const q = search.toLowerCase();
           result = result.filter(
@@ -60,12 +69,10 @@ export const useOpportunitiesStore = create<OpportunitiesState>()(
           );
         }
 
-        // Filter preset
         if (filter === "saved") result = result.filter((o) => savedIds.has(o.id));
         if (filter === "high-score") result = result.filter((o) => o.score >= 80);
         if (filter === "expiring") result = result.filter((o) => o.windowDays <= 7);
 
-        // Sort
         result.sort((a, b) => {
           if (sort === "score") return b.score - a.score;
           if (sort === "window") return a.windowDays - b.windowDays;
@@ -76,35 +83,8 @@ export const useOpportunitiesStore = create<OpportunitiesState>()(
       },
     }),
     {
-      name: "nf-opportunities",
-      // Serialize Set correctly
-      storage: {
-        getItem: (name) => {
-          const str = localStorage.getItem(name);
-          if (!str) return null;
-          const parsed = JSON.parse(str);
-          return {
-            ...parsed,
-            state: {
-              ...parsed.state,
-              savedIds: new Set(parsed.state.savedIds ?? []),
-            },
-          };
-        },
-        setItem: (name, value) => {
-          localStorage.setItem(
-            name,
-            JSON.stringify({
-              ...value,
-              state: {
-                ...value.state,
-                savedIds: Array.from(value.state.savedIds),
-              },
-            }),
-          );
-        },
-        removeItem: (name) => localStorage.removeItem(name),
-      },
+      name: "nf-opportunities-filters",
+      partialize: (state) => ({ filters: state.filters }),
     },
   ),
 );

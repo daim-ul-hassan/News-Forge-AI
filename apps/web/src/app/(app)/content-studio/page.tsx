@@ -3,13 +3,12 @@
 import { Check, ChevronDown, Clock, FileText, PenLine, Plus, Save, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { ErrorState } from "@/components/feedback/error-state";
 import { LoadingState } from "@/components/feedback/loading-state";
 import { PageHeader } from "@/components/feedback/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { usePageState } from "@/hooks/use-page-state";
 import { useDraftsStore } from "@/stores/drafts-store";
+import { useAuthStore } from "@/stores/auth-store";
 import { cn } from "@/lib/utils";
 import type { DraftFormat, DraftStatus } from "@/types/drafts.types";
 
@@ -28,11 +27,12 @@ function formatDate(iso: string) {
 }
 
 export default function ContentStudioPage() {
-  const { drafts, activeDraftId, lastSavedAt, createDraft, updateDraft, deleteDraft, setActiveDraft, activeDraft } =
+  const { drafts, activeDraftId, lastSavedAt, syncReady, createDraft, updateDraft, deleteDraft, setActiveDraft, activeDraft } =
     useDraftsStore();
 
   const draft = activeDraft();
-  const { isLoading, error } = usePageState(600);
+  const user = useAuthStore((s) => s.user);
+  const isLoading = !!user && !syncReady;
 
   const [newTitle, setNewTitle] = useState("");
   const [newFormat, setNewFormat] = useState<DraftFormat>("article");
@@ -137,11 +137,6 @@ export default function ContentStudioPage() {
         <div className="mt-8">
           <LoadingState rows={3} />
         </div>
-      ) : error ? (
-        <ErrorState
-          title="Failed to load drafts"
-          description="There was an error connecting to the content studio."
-        />
       ) : (
         <div className="mt-6 grid gap-6 lg:grid-cols-[260px_1fr]">
           {/* Drafts list */}
