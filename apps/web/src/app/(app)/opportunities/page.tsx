@@ -16,8 +16,7 @@ import { LoadingState } from "@/components/feedback/loading-state";
 import { PageHeader } from "@/components/feedback/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { usePageState } from "@/hooks/use-page-state";
-import { MOCK_OPPORTUNITIES } from "@/lib/data/opportunities.data";
+import { useOpportunitiesData } from "@/hooks/use-opportunities-data";
 import { useOpportunitiesStore } from "@/stores/opportunities-store";
 import { cn } from "@/lib/utils";
 import type { OpportunityFilterKey, OpportunitySortKey } from "@/types/opportunities.types";
@@ -47,12 +46,12 @@ function ScoreRing({ score }: { score: number }) {
 }
 
 export default function OpportunitiesPage() {
+  const { opportunities: allOpportunities, isLoading, error } = useOpportunitiesData();
   const { filters, toggleSaved, isSaved, setSearch, setFilter, setSort, filterOpportunities } =
     useOpportunitiesStore();
-  const { isLoading, error } = usePageState(600);
   const [sortOpen, setSortOpen] = useState(false);
 
-  const opportunities = filterOpportunities(MOCK_OPPORTUNITIES);
+  const opportunities = filterOpportunities(allOpportunities);
 
   return (
     <div className="min-w-0 space-y-6 overflow-x-hidden">

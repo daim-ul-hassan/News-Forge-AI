@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MOCK_TRENDS } from "@/lib/data/trends.data";
-import type { TrendCategory, TrendFilters, TrendSortKey, TrendStage } from "@/types/trends.types";
+import type { Trend, TrendCategory, TrendFilters, TrendSortKey, TrendStage } from "@/types/trends.types";
 
 const DEFAULT_FILTERS: TrendFilters = {
   search: "",
@@ -13,10 +13,13 @@ const DEFAULT_FILTERS: TrendFilters = {
 
 /**
  * Hook for trends data + filtering/sorting.
- * TODO: Replace MOCK_TRENDS with an API call once the backend trends endpoint is ready.
+ * Fetches from /api/trends with automatic fallback to mock data.
  */
 export function useTrends() {
   const [filters, setFilters] = useState<TrendFilters>(DEFAULT_FILTERS);
+  const [allTrends, setAllTrends] = useState<Trend[]>(MOCK_TRENDS);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const setSearch = (search: string) => setFilters((f) => ({ ...f, search }));
   const setCategory = (category: TrendCategory | "all") => setFilters((f) => ({ ...f, category }));
@@ -24,8 +27,40 @@ export function useTrends() {
   const setStage = (stage: TrendStage | "all") => setFilters((f) => ({ ...f, stage }));
   const resetFilters = () => setFilters(DEFAULT_FILTERS);
 
+  // Fetch trends from API on mount
+  useEffect(() => {
+    const fetchTrends = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const response = await fetch("/api/trends?limit=8");
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.trends && Array.isArray(data.trends)) {
+          setAllTrends(data.trends);
+        } else {
+          throw new Error("Invalid response format");
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to fetch trends";
+        console.error("Error fetching trends:", message);
+        setError(message);
+        // Fallback to mock data
+        setAllTrends(MOCK_TRENDS);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTrends();
+  }, []);
+
   const trends = useMemo(() => {
-    let result = [...MOCK_TRENDS];
+    let result = [...allTrends];
 
     if (filters.search.trim()) {
       const q = filters.search.toLowerCase();
@@ -53,7 +88,7 @@ export function useTrends() {
     });
 
     return result;
-  }, [filters]);
+  }, [allTrends, filters]);
 
-  return { trends, filters, setSearch, setCategory, setSort, setStage, resetFilters };
+  return { trends, filters, setSearch, setCategory, setSort, setStage, resetFilters, isLoading, error };
 }

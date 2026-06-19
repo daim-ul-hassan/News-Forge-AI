@@ -15,7 +15,6 @@ import { LoadingState } from "@/components/feedback/loading-state";
 import { PageHeader } from "@/components/feedback/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { usePageState } from "@/hooks/use-page-state";
 import { useTrends } from "@/hooks/use-trends";
 import { cn } from "@/lib/utils";
 import type { TrendCategory, TrendStage } from "@/types/trends.types";
@@ -51,8 +50,7 @@ const VELOCITY_COLOR = (v: number) => {
 };
 
 export default function TrendsPage() {
-  const { trends, filters, setSearch, setCategory, setSort, resetFilters } = useTrends();
-  const { isLoading, error } = usePageState(600);
+  const { trends, filters, setSearch, setCategory, setSort, resetFilters, isLoading, error } = useTrends();
   const [sortOpen, setSortOpen] = useState(false);
 
   const hasActiveFilters =
