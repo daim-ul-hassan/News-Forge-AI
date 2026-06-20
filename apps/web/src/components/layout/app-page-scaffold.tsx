@@ -19,10 +19,10 @@ export interface PlaceholderCard {
 interface AppPageScaffoldProps {
   title: string;
   description: string;
-  notice: string;
-  cards: PlaceholderCard[];
-  emptyTitle: string;
-  emptyDescription: string;
+  notice?: string;
+  cards?: PlaceholderCard[];
+  emptyTitle?: string;
+  emptyDescription?: string;
   errorTitle?: string;
   errorDescription?: string;
   children?: React.ReactNode;
@@ -53,68 +53,76 @@ export function AppPageScaffold({
         }
       />
 
-      <div className="app-panel overflow-hidden rounded-lg p-4 sm:p-5" role="note" aria-label="Integration notice">
-        <div className="flex gap-3">
-          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-primary/25 bg-primary/10 text-primary">
-            <Clock3 className="h-4 w-4" aria-hidden />
-          </span>
-          <div className="min-w-0">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
-              Backend integration pending
-            </p>
-            <p className="mt-1 break-words text-sm leading-6 text-muted-foreground">{notice}</p>
+      {notice && (
+        <div className="app-panel overflow-hidden rounded-lg p-4 sm:p-5" role="note" aria-label="Integration notice">
+          <div className="flex gap-3">
+            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-primary/25 bg-primary/10 text-primary">
+              <Clock3 className="h-4 w-4" aria-hidden />
+            </span>
+            <div className="min-w-0">
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
+                Backend integration pending
+              </p>
+              <p className="mt-1 break-words text-sm leading-6 text-muted-foreground">{notice}</p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      <section aria-labelledby={`${pageId}-placeholders`} className="space-y-4">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <h2 id={`${pageId}-placeholders`} className="text-lg font-semibold">
-              Planned workspace
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Production-ready placeholders for the capabilities this page will support.
-            </p>
+      {cards && cards.length > 0 && (
+        <section aria-labelledby={`${pageId}-placeholders`} className="space-y-4">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h2 id={`${pageId}-placeholders`} className="text-lg font-semibold">
+                Planned workspace
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Production-ready placeholders for the capabilities this page will support.
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {cards.map((card) => (
-            <PlaceholderFeatureCard key={card.title} card={card} />
-          ))}
-        </div>
-      </section>
+          <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {cards.map((card) => (
+              <PlaceholderFeatureCard key={card.title} card={card} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {children}
 
-      <section aria-labelledby={`${pageId}-states`} className="space-y-4">
-        <div>
-          <h2 id={`${pageId}-states`} className="text-lg font-semibold">
-            Page states
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Empty, loading, and error examples are visible now so future integrations have a clear UX target.
-          </p>
-        </div>
-        <div className="grid min-w-0 gap-4 xl:grid-cols-3">
-          <StateCard title="Loading state" icon={Clock3}>
-            <LoadingState rows={2} />
-          </StateCard>
-          <StateCard title="Error state" icon={AlertCircle}>
-            <ErrorState
-              title={errorTitle}
-              description={errorDescription}
-              className="min-h-[236px] border-border/80 bg-background/35 px-5 py-8"
-            />
-          </StateCard>
-          <EmptyState
-            title={emptyTitle}
-            description={emptyDescription}
-            className="min-h-[288px] bg-background/35 px-5 py-8"
-            icon={<CheckCircle2 className="h-6 w-6" aria-hidden />}
-          />
-        </div>
-      </section>
+      {(emptyTitle || emptyDescription || errorTitle || errorDescription) && (
+        <section aria-labelledby={`${pageId}-states`} className="space-y-4">
+          <div>
+            <h2 id={`${pageId}-states`} className="text-lg font-semibold">
+              Page states
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Empty, loading, and error examples are visible now so future integrations have a clear UX target.
+            </p>
+          </div>
+          <div className="grid min-w-0 gap-4 xl:grid-cols-3">
+            <StateCard title="Loading state" icon={Clock3}>
+              <LoadingState rows={2} />
+            </StateCard>
+            <StateCard title="Error state" icon={AlertCircle}>
+              <ErrorState
+                title={errorTitle}
+                description={errorDescription}
+                className="min-h-[236px] border-border/80 bg-background/35 px-5 py-8"
+              />
+            </StateCard>
+            {emptyTitle && emptyDescription && (
+              <EmptyState
+                title={emptyTitle}
+                description={emptyDescription}
+                className="min-h-[288px] bg-background/35 px-5 py-8"
+                icon={<CheckCircle2 className="h-6 w-6" aria-hidden />}
+              />
+            )}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 
-import { GlobePlaceholder } from "@/components/effects/globe-placeholder";
 
 export const metadata: Metadata = {
   title: "About",
@@ -34,15 +33,7 @@ export default function AboutPage() {
               <li>Educational and explainer creators</li>
             </ul>
           </section>
-          <section>
-            <h2 className="font-mono text-xl font-semibold">Global perspective</h2>
-            <p className="mt-3 text-muted-foreground">
-              Interactive visualizations and dynamic backgrounds will enhance the experience without compromising usability.
-            </p>
-            <div className="mt-6">
-              <GlobePlaceholder />
-            </div>
-          </section>
+
         </div>
       </div>
     </div>

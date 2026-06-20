@@ -34,7 +34,7 @@ export class ProviderFactory {
     const configuredProviders = this.getProvidersInOrder();
 
     if (configuredProviders.length === 0) {
-      return "AI services are temporarily unavailable.";
+      return "AI services are temporarily unavailable. Please try again later.";
     }
 
     for (const provider of configuredProviders) {
@@ -48,7 +48,7 @@ export class ProviderFactory {
       }
     }
 
-    return "AI services are temporarily unavailable.";
+    return "AI services are temporarily unavailable. Please try again later.";
   }
 }
 

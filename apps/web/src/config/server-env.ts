@@ -1,11 +1,11 @@
 import { z } from "zod";
 
 const serverEnvSchema = z.object({
-  NEWS_API_KEY: z.string().min(1).optional(),
-  OPENAI_API_KEY: z.string().min(1).optional(),
+  NEWS_API_KEY: z.string().optional(),
+  OPENAI_API_KEY: z.string().optional(),
   OPENAI_MODEL: z.string().default("gpt-4o-mini"),
-  GEMINI_API_KEY: z.string().min(1).optional(),
-  GROQ_API_KEY: z.string().min(1).optional(),
+  GEMINI_API_KEY: z.string().optional(),
+  GROQ_API_KEY: z.string().optional(),
   GROQ_MODEL: z.string().default("llama-3.3-70b-versatile"),
   AI_PROVIDER_ORDER: z.string().default("gemini,groq,openai"),
 });
