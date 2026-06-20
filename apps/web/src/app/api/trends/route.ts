@@ -15,12 +15,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ trends });
   } catch (err) {
-    console.error("Error fetching trends:", err);
-
-    // Always fallback to mock trends on error
-    const message = err instanceof Error ? err.message : "Failed to fetch trends";
-    const status = message.includes("not configured") ? 503 : 200;
-
-    return NextResponse.json({ trends: MOCK_TRENDS }, { status });
+    console.warn("[trends-api] Failed to fetch trends, falling back to mock trends:", err instanceof Error ? err.message : err);
+    return NextResponse.json({ trends: MOCK_TRENDS }, { status: 200 });
   }
 }

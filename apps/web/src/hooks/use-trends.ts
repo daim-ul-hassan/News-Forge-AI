@@ -47,8 +47,8 @@ export function useTrends() {
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : "Failed to fetch trends";
-        console.error("Error fetching trends:", message);
-        setError(message);
+        console.warn("[use-trends] Failed to fetch trends, falling back to mock data gracefully:", message);
+        setError(null);
         // Fallback to mock data
         setAllTrends(MOCK_TRENDS);
       } finally {

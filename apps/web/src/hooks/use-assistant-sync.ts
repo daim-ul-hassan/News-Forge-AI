@@ -30,7 +30,8 @@ export function useAssistantSync() {
         setSyncReady(true);
       })
       .catch((err) => {
-        console.error("[assistant-sync] Failed to load:", err);
+        const message = err instanceof Error ? err.message : (err && typeof err === "object" ? (err as { message?: string; details?: string }).message || (err as { message?: string; details?: string }).details || JSON.stringify(err) : String(err));
+        console.warn(`[assistant-sync] Failed to load (falling back to local state): ${message}`);
         readyRef.current = true;
         setSyncReady(true);
       });
@@ -52,7 +53,8 @@ export function useAssistantSync() {
 
       if (prev.conversation.id !== state.conversation.id && nextMessages.length === 0) {
         assistantService.clearConversation(user.id, prev.conversation.id).catch((err) => {
-          console.error("[assistant-sync] Failed to clear conversation:", err);
+          const msg = err instanceof Error ? err.message : (err && typeof err === "object" ? (err as { message?: string; details?: string }).message || (err as { message?: string; details?: string }).details || JSON.stringify(err) : String(err));
+          console.warn(`[assistant-sync] Failed to clear conversation: ${msg}`);
         });
         return;
       }
@@ -63,7 +65,8 @@ export function useAssistantSync() {
           assistantService
             .addMessage(user.id, state.conversation.id, message)
             .catch((err) => {
-              console.error("[assistant-sync] Failed to add message:", err);
+              const msg = err instanceof Error ? err.message : (err && typeof err === "object" ? (err as { message?: string; details?: string }).message || (err as { message?: string; details?: string }).details || JSON.stringify(err) : String(err));
+              console.warn(`[assistant-sync] Failed to add message: ${msg}`);
             });
         }
       }
@@ -80,7 +83,8 @@ export function useAssistantSync() {
           assistantService
             .updateMessageContent(state.conversation.id, lastNext.id, lastNext.content)
             .catch((err) => {
-              console.error("[assistant-sync] Failed to update message:", err);
+              const msg = err instanceof Error ? err.message : (err && typeof err === "object" ? (err as { message?: string; details?: string }).message || (err as { message?: string; details?: string }).details || JSON.stringify(err) : String(err));
+              console.warn(`[assistant-sync] Failed to update message: ${msg}`);
             });
         }
       }

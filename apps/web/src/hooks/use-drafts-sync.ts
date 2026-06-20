@@ -45,7 +45,13 @@ export function useDraftsSync() {
         setSyncReady(true);
       })
       .catch((err) => {
-        console.error("[drafts-sync] Failed to load:", err);
+        const message = err instanceof Error ? err.message : (err && typeof err === "object" ? (err as { message?: string; details?: string }).message || (err as { message?: string; details?: string }).details || JSON.stringify(err) : String(err));
+        console.warn(`[drafts-sync] Failed to load (falling back to local state): ${message}`);
+        if (!cancelled) {
+          hydrate([]);
+          readyRef.current = true;
+          setSyncReady(true);
+        }
       });
 
     return () => {
@@ -63,12 +69,14 @@ export function useDraftsSync() {
       const { added, removed, updated } = diffDrafts(prev.drafts, state.drafts);
       for (const draft of [...added, ...updated]) {
         draftsService.upsertDraft(user.id, draft).catch((err) => {
-          console.error("[drafts-sync] Failed to upsert draft:", err);
+          const msg = err instanceof Error ? err.message : (err && typeof err === "object" ? (err as { message?: string; details?: string }).message || (err as { message?: string; details?: string }).details || JSON.stringify(err) : String(err));
+          console.warn(`[drafts-sync] Failed to upsert draft: ${msg}`);
         });
       }
       for (const draft of removed) {
         draftsService.deleteDraft(user.id, draft.id).catch((err) => {
-          console.error("[drafts-sync] Failed to delete draft:", err);
+          const msg = err instanceof Error ? err.message : (err && typeof err === "object" ? (err as { message?: string; details?: string }).message || (err as { message?: string; details?: string }).details || JSON.stringify(err) : String(err));
+          console.warn(`[drafts-sync] Failed to delete draft: ${msg}`);
         });
       }
     });

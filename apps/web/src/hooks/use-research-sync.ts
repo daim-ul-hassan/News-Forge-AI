@@ -55,7 +55,13 @@ export function useResearchSync() {
         setSyncReady(true);
       })
       .catch((err) => {
-        console.error("[research-sync] Failed to load:", err);
+        const message = err instanceof Error ? err.message : (err && typeof err === "object" ? (err as { message?: string; details?: string }).message || (err as { message?: string; details?: string }).details || JSON.stringify(err) : String(err));
+        console.warn(`[research-sync] Failed to load (falling back to local state): ${message}`);
+        if (!cancelled) {
+          hydrate({ notes: [], history: [] });
+          readyRef.current = true;
+          setSyncReady(true);
+        }
       });
 
     return () => {
@@ -73,18 +79,21 @@ export function useResearchSync() {
       const { added, removed, updated } = diffNotes(prev.notes, state.notes);
       for (const note of [...added, ...updated]) {
         researchService.upsertNote(user.id, note).catch((err) => {
-          console.error("[research-sync] Failed to upsert note:", err);
+          const msg = err instanceof Error ? err.message : (err && typeof err === "object" ? (err as { message?: string; details?: string }).message || (err as { message?: string; details?: string }).details || JSON.stringify(err) : String(err));
+          console.warn(`[research-sync] Failed to upsert note: ${msg}`);
         });
       }
       for (const note of removed) {
         researchService.deleteNote(user.id, note.id).catch((err) => {
-          console.error("[research-sync] Failed to delete note:", err);
+          const msg = err instanceof Error ? err.message : (err && typeof err === "object" ? (err as { message?: string; details?: string }).message || (err as { message?: string; details?: string }).details || JSON.stringify(err) : String(err));
+          console.warn(`[research-sync] Failed to delete note: ${msg}`);
         });
       }
 
       if (prev.history.length > 0 && state.history.length === 0 && prev.history !== state.history) {
         researchService.clearHistory(user.id).catch((err) => {
-          console.error("[research-sync] Failed to clear history:", err);
+          const msg = err instanceof Error ? err.message : (err && typeof err === "object" ? (err as { message?: string; details?: string }).message || (err as { message?: string; details?: string }).details || JSON.stringify(err) : String(err));
+          console.warn(`[research-sync] Failed to clear history: ${msg}`);
         });
         return;
       }
@@ -92,12 +101,14 @@ export function useResearchSync() {
       const historyDiff = diffHistory(prev.history, state.history);
       for (const item of historyDiff.added) {
         researchService.upsertHistoryItem(user.id, item).catch((err) => {
-          console.error("[research-sync] Failed to upsert history:", err);
+          const msg = err instanceof Error ? err.message : (err && typeof err === "object" ? (err as { message?: string; details?: string }).message || (err as { message?: string; details?: string }).details || JSON.stringify(err) : String(err));
+          console.warn(`[research-sync] Failed to upsert history: ${msg}`);
         });
       }
       for (const item of historyDiff.removed) {
         researchService.deleteHistoryItem(user.id, item.id).catch((err) => {
-          console.error("[research-sync] Failed to delete history item:", err);
+          const msg = err instanceof Error ? err.message : (err && typeof err === "object" ? (err as { message?: string; details?: string }).message || (err as { message?: string; details?: string }).details || JSON.stringify(err) : String(err));
+          console.warn(`[research-sync] Failed to delete history item: ${msg}`);
         });
       }
     });

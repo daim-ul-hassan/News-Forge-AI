@@ -30,7 +30,13 @@ export function useOpportunitiesSync() {
         setSyncReady(true);
       })
       .catch((err) => {
-        console.error("[opportunities-sync] Failed to load:", err);
+        const message = err instanceof Error ? err.message : (err && typeof err === "object" ? (err as { message?: string; details?: string }).message || (err as { message?: string; details?: string }).details || JSON.stringify(err) : String(err));
+        console.warn(`[opportunities-sync] Failed to load (falling back to local state): ${message}`);
+        if (!cancelled) {
+          hydrateSavedIds(new Set());
+          readyRef.current = true;
+          setSyncReady(true);
+        }
       });
 
     return () => {
@@ -51,12 +57,14 @@ export function useOpportunitiesSync() {
 
       for (const id of added) {
         opportunitiesService.save(user.id, id).catch((err) => {
-          console.error("[opportunities-sync] Failed to save:", err);
+          const msg = err instanceof Error ? err.message : (err && typeof err === "object" ? (err as { message?: string; details?: string }).message || (err as { message?: string; details?: string }).details || JSON.stringify(err) : String(err));
+          console.warn(`[opportunities-sync] Failed to save: ${msg}`);
         });
       }
       for (const id of removed) {
         opportunitiesService.unsave(user.id, id).catch((err) => {
-          console.error("[opportunities-sync] Failed to unsave:", err);
+          const msg = err instanceof Error ? err.message : (err && typeof err === "object" ? (err as { message?: string; details?: string }).message || (err as { message?: string; details?: string }).details || JSON.stringify(err) : String(err));
+          console.warn(`[opportunities-sync] Failed to unsave: ${msg}`);
         });
       }
     });
