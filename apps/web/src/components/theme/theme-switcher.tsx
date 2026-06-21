@@ -1,10 +1,10 @@
 "use client";
 
 import { Moon, Sun, Monitor } from "lucide-react";
-import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useSettingsStore } from "@/stores/settings-store";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function ThemeSwitcher() {
-  const { theme, setTheme } = useTheme();
+  const { settings, updateSettings } = useSettingsStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -35,15 +35,15 @@ export function ThemeSwitcher() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")} className={theme === "light" ? "bg-accent" : ""}>
+        <DropdownMenuItem onClick={() => updateSettings({ theme: "light" })} className={settings.theme === "light" ? "bg-accent" : ""}>
           <Sun className="mr-2 h-4 w-4" />
           Light
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")} className={theme === "dark" ? "bg-accent" : ""}>
+        <DropdownMenuItem onClick={() => updateSettings({ theme: "dark" })} className={settings.theme === "dark" ? "bg-accent" : ""}>
           <Moon className="mr-2 h-4 w-4" />
           Dark
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")} className={theme === "system" ? "bg-accent" : ""}>
+        <DropdownMenuItem onClick={() => updateSettings({ theme: "system" })} className={settings.theme === "system" ? "bg-accent" : ""}>
           <Monitor className="mr-2 h-4 w-4" />
           System
         </DropdownMenuItem>
@@ -51,3 +51,4 @@ export function ThemeSwitcher() {
     </DropdownMenu>
   );
 }
+

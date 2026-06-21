@@ -1,6 +1,6 @@
 "use client";
 
-import { UserRoundCog } from "lucide-react";
+import { Loader } from "lucide-react";
 import { PageHeader } from "@/components/feedback/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,6 +74,8 @@ export function CreatorProfileClient() {
   const [platformsOther, setPlatformsOther] = useState("");
   const [contentTypesOther, setContentTypesOther] = useState("");
   const [topicsOther, setTopicsOther] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Extract which platforms are selected from platform links
   const selectedPlatforms = Object.entries(formData.platforms)
@@ -92,8 +94,17 @@ export function CreatorProfileClient() {
     if (profile) setFormData(profile);
   }, [profile]);
 
-  const handleSave = () => {
-    updateProfile(formData);
+  const handleSave = async () => {
+    setIsLoading(true);
+    try {
+      updateProfile(formData);
+      // Simulate save completion with slight delay
+      await new Promise(resolve => setTimeout(resolve, 600));
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleReset = () => {
@@ -192,17 +203,7 @@ export function CreatorProfileClient() {
 
       <div className="flex flex-col gap-6 max-w-3xl">
         <div className="app-panel rounded-lg p-6">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-border bg-background/45 text-muted-foreground overflow-hidden">
-              {formData.avatarUrl ? (
-                <>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={formData.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                </>
-              ) : (
-                <UserRoundCog className="h-8 w-8" aria-hidden />
-              )}
-            </div>
+          <div className="flex flex-col gap-5">
             <div className="min-w-0 flex-1">
               <h2 className="text-xl font-semibold">Profile Completion: {completionPercentage}%</h2>
               <div className="w-full bg-secondary mt-2 rounded-full h-2">
@@ -263,29 +264,18 @@ export function CreatorProfileClient() {
                     <label htmlFor={`platform-${option.id}`} className="text-sm font-medium cursor-pointer">{option.label}</label>
                   </div>
 
-                  {/* Input field for platforms except "other" */}
-                  {option.id !== "other" && selectedPlatforms.includes(option.id) && (
+                  {/* Input field only for "other" */}
+                  {option.id === "other" && selectedPlatforms.includes("other") && (
                     <div className="ml-7 mt-2">
                       <Input
-                        placeholder={`Your ${option.label} link`}
-                        value={formData.platforms[option.id as keyof typeof formData.platforms]}
-                        onChange={(e) => updatePlatform(option.id, e.target.value)}
+                        placeholder="Other platform (e.g., Substack, Patreon)"
+                        value={platformsOther}
+                        onChange={(e) => setPlatformsOther(e.target.value)}
                       />
                     </div>
                   )}
                 </div>
               ))}
-
-              {/* Other platform input */}
-              {selectedPlatforms.includes("other") && (
-                <div className="ml-7 mt-2">
-                  <Input
-                    placeholder="Other platform (e.g., Substack, Patreon)"
-                    value={platformsOther}
-                    onChange={(e) => setPlatformsOther(e.target.value)}
-                  />
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -399,8 +389,21 @@ export function CreatorProfileClient() {
         <Separator />
 
         <div className="flex items-center gap-4">
-          <Button onClick={handleSave}>Save Profile</Button>
-          <Button variant="outline" onClick={handleReset}>Reset</Button>
+          <Button
+            onClick={handleSave}
+            disabled={isLoading}
+            className="gap-2"
+          >
+            {isLoading && <Loader className="h-4 w-4 animate-spin" />}
+            {showSuccess ? "✓ Profile saved" : isLoading ? "Saving..." : "Save Profile"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleReset}
+            disabled={isLoading}
+          >
+            Reset
+          </Button>
         </div>
       </div>
     </div>

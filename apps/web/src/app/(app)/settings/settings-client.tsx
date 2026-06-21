@@ -9,23 +9,35 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSettings } from "@/hooks/use-settings";
+import { useProfile } from "@/hooks/use-profile";
 import { useAuthStore } from "@/stores/auth-store";
-import { useProfileStore } from "@/stores/profile-store";
 import { useResearchStore } from "@/stores/research-store";
 import { useDraftsStore } from "@/stores/drafts-store";
 
 export function SettingsClient() {
   const { settings, updateSettings, clearAllData, density, effectsEnabled, setDensity, setEffectsEnabled } = useSettings();
+  const { profile, updateProfile } = useProfile();
   const { user } = useAuthStore();
-  const { profile } = useProfileStore();
   const { notes } = useResearchStore();
   const { drafts } = useDraftsStore();
-
+  const [displayNameEdit, setDisplayNameEdit] = useState(profile?.displayName || "");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (profile?.displayName) {
+      setDisplayNameEdit(profile.displayName);
+    }
+  }, [profile?.displayName]);
+
+  const handleSaveDisplayName = () => {
+    if (displayNameEdit.trim()) {
+      updateProfile({ displayName: displayNameEdit.trim() });
+    }
+  };
 
   const moveProvider = (index: number, direction: 'up' | 'down') => {
     const newOrder = [...settings.aiPreferences.providerOrder];
@@ -91,8 +103,22 @@ export function SettingsClient() {
                 </div>
                 <div className="grid gap-2">
                   <label htmlFor="displayName" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Display Name</label>
-                  <Input id="displayName" value={user.user_metadata?.full_name || ""} readOnly disabled className="bg-muted/50" />
-                  <p className="text-xs text-muted-foreground">To change your display name, edit it in your Creator Profile.</p>
+                  <div className="flex gap-2">
+                    <Input
+                      id="displayName"
+                      value={displayNameEdit}
+                      onChange={(e) => setDisplayNameEdit(e.target.value)}
+                      placeholder="Your display name"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={handleSaveDisplayName}
+                      disabled={!displayNameEdit.trim()}
+                    >
+                      Save
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">This name will also appear in your Creator Profile.</p>
                 </div>
               </div>
             ) : (
