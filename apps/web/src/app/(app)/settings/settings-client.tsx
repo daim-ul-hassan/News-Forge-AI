@@ -3,7 +3,7 @@
 import { Bell, Shield, User, ArrowUp, ArrowDown, Download, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 
-import { AppPageScaffold } from "@/components/layout/app-page-scaffold";
+import { PageHeader } from "@/components/feedback/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -63,10 +63,11 @@ export function SettingsClient() {
   if (!mounted) return null;
 
   return (
-    <AppPageScaffold
-      title="Settings"
-      description="Manage your account, preferences, and local data."
-    >
+    <div className="min-w-0 space-y-8 overflow-x-hidden">
+      <PageHeader
+        title="Settings"
+        description="Manage your account, preferences, and local data."
+      />
       <Tabs defaultValue="account" className="app-panel rounded-lg p-4 sm:p-5">
         <TabsList className="grid h-auto w-full grid-cols-2 sm:inline-flex sm:w-auto md:grid-cols-5 gap-2">
           <TabsTrigger value="account">Account</TabsTrigger>
@@ -278,6 +279,6 @@ export function SettingsClient() {
         </TabsContent>
 
       </Tabs>
-    </AppPageScaffold>
+    </div>
   );
 }

@@ -6,6 +6,7 @@ import { AppHeader } from "@/components/layout/app-header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { CommandPalette } from "@/components/search/command-palette";
+import { PersonalizationBanner } from "@/components/feedback/personalization-banner";
 import { useAuthStore } from "@/stores/auth-store";
 
 interface DashboardShellProps {
@@ -40,6 +41,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
         <AuthBanner />
         <AppHeader />
         <main id="main-content" className="flex-1 overflow-x-hidden overflow-y-auto p-4 lg:p-6">
+          <PersonalizationBanner />
           {children}
         </main>
       </div>

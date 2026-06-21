@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { Activity, BarChart3, FileText, Radar, ArrowRight, Plus, Zap, Bot } from "lucide-react";
 
-
+import { DashboardGreeting } from "@/components/dashboard/dashboard-greeting";
 import { StatCard } from "@/components/data-display/stat-card";
-import { AppPageScaffold } from "@/components/layout/app-page-scaffold";
 import { Button } from "@/components/ui/button";
 import { useDashboard } from "@/hooks/use-dashboard";
 
@@ -17,10 +16,8 @@ export function DashboardClient() {
   };
 
   return (
-    <AppPageScaffold
-      title="Dashboard"
-      description="A high-level operating view for content intelligence."
-    >
+    <div className="min-w-0 space-y-8 overflow-x-hidden">
+      <DashboardGreeting />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard title="Research Notes" value={metrics.totalNotes.toString()} description="Saved research items" trend={metrics.totalNotes > 0 ? "+ Active" : "No notes yet"} className="bg-card/70" />
         <StatCard title="Drafts" value={metrics.totalDrafts.toString()} description="Content items in pipeline" trend={metrics.totalDrafts > 0 ? "+ Active" : "No drafts yet"} className="bg-card/70" />
@@ -129,6 +126,6 @@ export function DashboardClient() {
           </div>
         </div>
       </div>
-    </AppPageScaffold>
+    </div>
   );
 }

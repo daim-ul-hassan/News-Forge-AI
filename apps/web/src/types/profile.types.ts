@@ -14,4 +14,6 @@ export interface CreatorProfile {
   contentCategories: string[];
   writingTone: string;
   contentTypes: string[];
+  topics?: string[];
 }
+

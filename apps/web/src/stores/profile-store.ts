@@ -24,6 +24,7 @@ const defaultProfile: CreatorProfile = {
   contentCategories: [],
   writingTone: "",
   contentTypes: [],
+  topics: [],
 };
 
 export const useProfileStore = create<ProfileState>()(

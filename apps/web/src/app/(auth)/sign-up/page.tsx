@@ -35,9 +35,9 @@ export default function SignUpPage() {
 
       if (error) throw error;
 
-      toast.success("Account created successfully!");
+      toast.success("Account created successfully! Let's set up your creator profile.");
       // If email confirmation is disabled, user is signed in immediately
-      router.push(appRoutes.dashboard);
+      router.push(appRoutes.creatorProfile);
       router.refresh();
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : "Failed to create account.");

@@ -9,10 +9,12 @@ import { ModalProvider } from "@/components/modals/modal-provider";
 import { QueryProvider } from "@/providers/query-provider";
 import { AuthProvider } from "@/providers/auth-provider";
 import { DataSyncProvider } from "@/providers/data-sync-provider";
+import { ThemeSyncProvider } from "@/components/providers/theme-sync-provider";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <NextThemesProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+      <ThemeSyncProvider />
       <QueryProvider>
         <AuthProvider>
           <DataSyncProvider>
