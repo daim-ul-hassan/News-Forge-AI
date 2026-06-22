@@ -22,6 +22,8 @@ export function SettingsClient() {
   const { drafts } = useDraftsStore();
   const [displayNameEdit, setDisplayNameEdit] = useState(profile?.displayName || "");
   const [mounted, setMounted] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showSaved, setShowSaved] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -33,9 +35,21 @@ export function SettingsClient() {
     }
   }, [profile?.displayName]);
 
-  const handleSaveDisplayName = () => {
-    if (displayNameEdit.trim()) {
+  const handleSaveDisplayName = async () => {
+    if (!displayNameEdit.trim()) return;
+    setIsSaving(true);
+    setShowSaved(false);
+
+    try {
+      // Simulate async save (updateProfile persists to local store)
       updateProfile({ displayName: displayNameEdit.trim() });
+      // small delay to show spinner
+      await new Promise((r) => setTimeout(r, 500));
+      setShowSaved(true);
+      // auto-hide after 2s
+      setTimeout(() => setShowSaved(false), 2000);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -113,9 +127,9 @@ export function SettingsClient() {
                     <Button
                       size="sm"
                       onClick={handleSaveDisplayName}
-                      disabled={!displayNameEdit.trim()}
+                      disabled={!displayNameEdit.trim() || isSaving}
                     >
-                      Save
+                      {isSaving ? "Saving..." : showSaved ? "✓ Display name saved" : "Save"}
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">This name will also appear in your Creator Profile.</p>

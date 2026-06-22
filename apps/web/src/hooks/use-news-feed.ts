@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { fetchNewsFeed } from "@/lib/services/news/client";
+import { useProfile } from "@/hooks/use-profile";
+import { scoreArticleForProfile } from "@/lib/personalization";
 import type { ArticleCategory, ArticleStatus, NewsFeedFilters } from "@/types/news.types";
 
 const PAGE_SIZE = 6;
@@ -48,10 +50,20 @@ export function useNewsFeed() {
     retry: 1,
   });
 
-  const articles =
+  const { profile } = useProfile();
+
+  let articles =
     filters.status === "all"
       ? (query.data?.articles ?? [])
       : (query.data?.articles ?? []).filter((a) => a.status === filters.status);
+
+  // Personalize ordering when profile exists
+  if (profile) {
+    articles = articles
+      .map((a) => ({ a, score: scoreArticleForProfile(a, profile) }))
+      .sort((x, y) => y.score - x.score)
+      .map((p) => p.a);
+  }
 
   const total =
     filters.status === "all" ? (query.data?.total ?? 0) : articles.length;

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useProfile } from "@/hooks/use-profile";
+import { scoreTrendForProfile } from "@/lib/personalization";
 import { MOCK_TRENDS } from "@/lib/data/trends.data";
 import type { Trend, TrendCategory, TrendFilters, TrendSortKey, TrendStage } from "@/types/trends.types";
 
@@ -22,6 +24,7 @@ export function useTrends() {
   const [error, setError] = useState<string | null>(null);
 
   const setSearch = (search: string) => setFilters((f) => ({ ...f, search }));
+  const { profile } = useProfile();
   const setCategory = (category: TrendCategory | "all") => setFilters((f) => ({ ...f, category }));
   const setSort = (sort: TrendSortKey) => setFilters((f) => ({ ...f, sort }));
   const setStage = (stage: TrendStage | "all") => setFilters((f) => ({ ...f, stage }));
@@ -80,6 +83,7 @@ export function useTrends() {
       result = result.filter((t) => t.stage === filters.stage);
     }
 
+    // Default sort
     result.sort((a, b) => {
       if (filters.sort === "velocity") return b.velocity - a.velocity;
       if (filters.sort === "change") return b.change - a.change;
@@ -87,8 +91,20 @@ export function useTrends() {
       return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
     });
 
+    // Personalize ordering when profile exists (place high personal relevance first while still respecting velocity)
+    if (profile) {
+      result = result
+        .map((t) => ({ t, relevance: scoreTrendForProfile(t, profile) }))
+        .sort((x, y) => {
+          // Rank by relevance first, then velocity
+          if (y.relevance !== x.relevance) return y.relevance - x.relevance;
+          return y.t.velocity - x.t.velocity;
+        })
+        .map((p) => p.t);
+    }
+
     return result;
-  }, [allTrends, filters]);
+  }, [allTrends, filters, profile]);
 
   return { trends, filters, setSearch, setCategory, setSort, setStage, resetFilters, isLoading, error };
 }

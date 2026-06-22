@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import type { Message, Conversation } from "@/types/assistant.types";
 import { streamAssistantResponse } from "@/lib/services/assistant/client";
+import { useProfileStore } from "@/stores/profile-store";
+import { summarizeProfile } from "@/lib/personalization";
 
 function generateId() {
   return crypto.randomUUID();
@@ -63,7 +65,16 @@ export const useAssistantStore = create<AssistantStore>()((set, get) => ({
     try {
       const history = messagesWithUser.map((m) => ({ role: m.role, content: m.content }));
 
-      await streamAssistantResponse(history, {
+      // Inject profile context into system prompt when available
+      const profile = useProfileStore.getState().profile;
+      const baseSystem =
+        "You are NewsForge AI, a helpful assistant for content creators and journalists. " +
+        "Help users research topics, brainstorm content angles, analyze news trends, and draft content ideas. " +
+        "Be concise, practical, and actionable.";
+      const profileContext = summarizeProfile(profile);
+      const systemMessage = profileContext ? `${baseSystem}\n\n${profileContext}` : baseSystem;
+
+      await streamAssistantResponse([{ role: "system", content: systemMessage }, ...history], {
         onToken: (token) => {
           set((state) => {
             const messages = [...state.conversation.messages];
