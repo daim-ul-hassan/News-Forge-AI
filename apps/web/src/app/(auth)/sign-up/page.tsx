@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { profileService } from "@/lib/supabase/services/profile.service";
+import { settingsService } from "@/lib/supabase/services/settings.service";
+import { subscriptionsService } from "@/lib/supabase/services/subscriptions.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +40,16 @@ export default function SignUpPage() {
 
       toast.success("Account created successfully! Let's set up your creator profile.");
       // If email confirmation is disabled, user is signed in immediately
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Ensure DB rows exist
+        await Promise.all([
+          profileService.ensureProfile(user.id),
+          settingsService.ensureSettings(user.id),
+          subscriptionsService.ensureSubscription(user.id),
+        ]).catch((err) => console.warn("Failed to create default rows post-signup", err));
+      }
+
       router.push(appRoutes.creatorProfile);
       router.refresh();
     } catch (error: unknown) {

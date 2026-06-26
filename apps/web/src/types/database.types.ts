@@ -15,13 +15,29 @@ export interface Database {
           email: string;
           full_name: string | null;
           avatar_url: string | null;
+          display_name: string | null;
+          bio: string | null;
+          niche: string | null;
+          platforms: string[] | null;
+          topics: string[] | null;
+          content_types: string[] | null;
+          writing_styles: string[] | null;
+          completion_percentage: number | null;
           created_at: string;
         };
         Insert: {
           id: string;
-          email: string;
+          email?: string;
           full_name?: string | null;
           avatar_url?: string | null;
+          display_name?: string | null;
+          bio?: string | null;
+          niche?: string | null;
+          platforms?: string[] | null;
+          topics?: string[] | null;
+          content_types?: string[] | null;
+          writing_styles?: string[] | null;
+          completion_percentage?: number | null;
           created_at?: string;
         };
         Update: {
@@ -29,6 +45,14 @@ export interface Database {
           email?: string;
           full_name?: string | null;
           avatar_url?: string | null;
+          display_name?: string | null;
+          bio?: string | null;
+          niche?: string | null;
+          platforms?: string[] | null;
+          topics?: string[] | null;
+          content_types?: string[] | null;
+          writing_styles?: string[] | null;
+          completion_percentage?: number | null;
           created_at?: string;
         };
         Relationships: [];

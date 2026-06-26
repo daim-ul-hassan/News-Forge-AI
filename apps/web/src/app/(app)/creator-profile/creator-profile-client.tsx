@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 
 import { useProfile } from "@/hooks/use-profile";
+import { createClient } from "@/lib/supabase/client";
+import { profileService } from "@/lib/supabase/services/profile.service";
 import { useState, useEffect } from "react";
 
 const PLATFORM_OPTIONS = [
@@ -97,11 +99,21 @@ export function CreatorProfileClient() {
   const handleSave = async () => {
     setIsLoading(true);
     try {
+      // Update local store immediately
       updateProfile(formData);
-      // Simulate save completion with slight delay
-      await new Promise(resolve => setTimeout(resolve, 600));
+
+      // Persist to Supabase when signed in
+      // upsertProfile now handles completion_percentage computation internally
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await profileService.upsertProfile(user.id, { ...formData });
+      }
+
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 2000);
+    } catch (err) {
+      console.warn("Failed to save profile to Supabase", err);
     } finally {
       setIsLoading(false);
     }
