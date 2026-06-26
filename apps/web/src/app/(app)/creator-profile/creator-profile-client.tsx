@@ -97,24 +97,33 @@ export function CreatorProfileClient() {
   }, [profile]);
 
   const handleSave = async () => {
+    console.log("[save-trace] 1. Enter handleSave");
     setIsLoading(true);
     try {
+      console.log("[save-trace] 2. Calling updateProfile");
       // Update local store immediately
       updateProfile(formData);
 
+      console.log("[save-trace] 3. Creating supabase client");
       // Persist to Supabase when signed in
       // upsertProfile now handles completion_percentage computation internally
       const supabase = createClient();
+      console.log("[save-trace] 4. Getting user");
       const { data: { user } } = await supabase.auth.getUser();
+      console.log("[save-trace] 5. Got user:", user?.id);
       if (user) {
+        console.log("[save-trace] 6. Calling upsertProfile");
         await profileService.upsertProfile(user.id, { ...formData });
+        console.log("[save-trace] 7. upsertProfile complete");
       }
 
+      console.log("[save-trace] 8. Setting success state");
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 2000);
     } catch (err) {
       console.warn("Failed to save profile to Supabase", err);
     } finally {
+      console.log("[save-trace] 9. Finally block");
       setIsLoading(false);
     }
   };

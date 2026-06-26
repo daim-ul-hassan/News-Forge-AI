@@ -117,6 +117,7 @@ export const profileService = {
   },
 
   async upsertProfile(userId: string, partial: Partial<CreatorProfile>) {
+    console.log("[save-trace] upsertProfile entry:", { userId, partial });
     try {
       const supabase = createClient();
       // Map partial to DB columns — only include fields that are actually present
@@ -149,13 +150,17 @@ export const profileService = {
       // Compute and persist completion_percentage
       row.completion_percentage = computeCompletion(partial);
 
+      console.log("[save-trace] upsertProfile DB Row to upsert:", row);
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await supabase.from("profiles").upsert(row as any);
+      console.log("[save-trace] Awaiting Supabase upsert...");
+      const { data, error } = await supabase.from("profiles").upsert(row as any).select();
+      console.log("[save-trace] Supabase upsert returned:", { data, error });
       if (error)
         console.warn("[profileService] upsertProfile error", error.message);
       return !error;
     } catch (err) {
-      console.warn("[profileService] upsertProfile unexpected", err);
+      console.warn("[save-trace] upsertProfile unexpected error:", err);
       return false;
     }
   },

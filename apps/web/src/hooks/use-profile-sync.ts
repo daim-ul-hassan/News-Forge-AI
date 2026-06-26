@@ -43,11 +43,18 @@ export function useProfileSync() {
     if (!user) return;
 
     return useProfileStore.subscribe((state, prev) => {
+      console.log("[save-trace] useProfileStore subscription fired:", {
+        ready: readyRef.current,
+        profileChanged: state.profile !== prev.profile
+      });
       if (!readyRef.current) return;
       if (state.profile === prev.profile) return;
 
+      console.log("[save-trace] Subscription executing upsertProfile");
       // Persist changes to Supabase
-      profileService.upsertProfile(user.id, state.profile ?? {}).catch((err) => {
+      profileService.upsertProfile(user.id, state.profile ?? {}).then((res) => {
+        console.log("[save-trace] Subscription upsertProfile returned:", res);
+      }).catch((err) => {
         console.warn("[profile-sync] failed to persist profile", err);
       });
     });
