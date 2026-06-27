@@ -35,7 +35,7 @@ export class OpportunitiesService implements OpportunitiesProvider {
       return { opportunities };
     } catch (error) {
       console.error("Error fetching opportunities:", error);
-      return { opportunities: [] };
+      throw error;
     }
   }
 }

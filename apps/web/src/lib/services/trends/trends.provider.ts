@@ -180,7 +180,7 @@ export class NewsApiTrendsProvider implements TrendsProvider {
       return { trends };
     } catch (error) {
       console.error("Error fetching trends:", error);
-      return { trends: [] };
+      throw error;
     }
   }
 }
