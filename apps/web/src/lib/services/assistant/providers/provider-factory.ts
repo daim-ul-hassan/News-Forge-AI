@@ -34,21 +34,25 @@ export class ProviderFactory {
     const configuredProviders = this.getProvidersInOrder();
 
     if (configuredProviders.length === 0) {
-      return "AI services are temporarily unavailable. Please try again later.";
+      throw new Error("No AI providers are configured. Please check your API keys.");
     }
+
+    let lastError: Error | unknown;
 
     for (const provider of configuredProviders) {
       try {
         console.log(`[Assistant] Attempting response with provider: ${provider.name}`);
-        const response = await provider.generateResponse(messages);
-        return response;
+        return await provider.generateResponse(messages);
       } catch (error) {
-        console.error(`[Assistant] Provider ${provider.name} failed:`, error);
-        // Fallback to next provider in list
+        console.warn(
+          `[Assistant] Provider ${provider.name} failed:`,
+          error instanceof Error ? error.message : String(error)
+        );
+        lastError = error;
       }
     }
 
-    return "AI services are temporarily unavailable. Please try again later.";
+    throw lastError ?? new Error("All configured AI providers failed to respond.");
   }
 }
 
