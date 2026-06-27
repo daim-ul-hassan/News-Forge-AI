@@ -13,8 +13,13 @@ export interface ResearchHistoryItem {
   timestamp: string; // ISO date string
 }
 
+export type SortOrder = "newest" | "oldest" | "alphabetical";
+
 export interface ResearchState {
   notes: ResearchNote[];
   history: ResearchHistoryItem[];
   searchQuery: string;
+  pinnedIds: string[];
+  recentIds: string[];
+  sortOrder: SortOrder;
 }
