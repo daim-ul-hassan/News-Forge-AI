@@ -3,6 +3,7 @@ import { useResearchStore } from "@/stores/research-store";
 import { useDraftsStore } from "@/stores/drafts-store";
 import { useOpportunitiesStore } from "@/stores/opportunities-store";
 import { useAssistantStore } from "@/stores/assistant-store";
+import { useOpportunitiesData } from "@/hooks/use-opportunities-data";
 import type { DashboardMetrics, ActivityItem, DashboardInsights } from "@/types/dashboard.types";
 
 export function useDashboard() {
@@ -10,6 +11,7 @@ export function useDashboard() {
   const { drafts } = useDraftsStore();
   const { savedIds } = useOpportunitiesStore();
   const { conversation } = useAssistantStore();
+  const { opportunities, isLoading } = useOpportunitiesData();
 
   const metrics: DashboardMetrics = useMemo(() => {
     // Count assistant messages that are from the user, or count all. 
@@ -46,20 +48,48 @@ export function useDashboard() {
       });
     });
 
-    // We can't easily get the title of saved opportunities since the store only has savedIds. 
-    // But we'll add what we can if they were full objects.
-    // For now, let's just sort notes and drafts.
-    
+    // Include saved opportunities in recent activity
+    opportunities.forEach((o) => {
+      if (savedIds.has(o.id)) {
+        items.push({
+          id: o.id,
+          title: o.title,
+          type: "opportunity",
+          timestamp: o.createdAt, // We use createdAt since we don't track savedAt
+          href: `/opportunities`,
+        });
+      }
+    });
+
     return items.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 5);
-  }, [notes, drafts]);
+  }, [notes, drafts, savedIds, opportunities]);
 
   const insights: DashboardInsights = useMemo(() => {
     const lastActivity = recentActivity.length > 0 ? recentActivity[0].timestamp : null;
     
-    // Calculate most active category (just basic heuristic for now)
+    // Calculate most active category based on tags/topics
+    const categoryCounts: Record<string, number> = {};
+    
+    notes.forEach(n => {
+      n.tags?.forEach(tag => {
+        categoryCounts[tag] = (categoryCounts[tag] || 0) + 1;
+      });
+    });
+    
     let mostActiveCategory = null;
-    if (notes.length > drafts.length) mostActiveCategory = "Research";
-    else if (drafts.length > 0) mostActiveCategory = "Drafting";
+    let maxCount = 0;
+    
+    for (const [category, count] of Object.entries(categoryCounts)) {
+      if (count > maxCount) {
+        maxCount = count;
+        mostActiveCategory = category;
+      }
+    }
+    
+    if (!mostActiveCategory) {
+      if (notes.length > drafts.length) mostActiveCategory = "Research";
+      else if (drafts.length > 0) mostActiveCategory = "Drafting";
+    }
 
     return {
       totalNotes: notes.length,
@@ -68,7 +98,7 @@ export function useDashboard() {
       lastActivityTimestamp: lastActivity,
       mostActiveCategory,
     };
-  }, [notes.length, drafts.length, savedIds.size, recentActivity]);
+  }, [notes, drafts, savedIds.size, recentActivity]);
 
-  return { metrics, recentActivity, insights };
+  return { metrics, recentActivity, insights, isLoading };
 }

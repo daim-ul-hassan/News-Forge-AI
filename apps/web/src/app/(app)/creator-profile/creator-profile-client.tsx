@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 
 import { useProfile } from "@/hooks/use-profile";
+import { useSettings } from "@/hooks/use-settings";
 import { useAuthStore } from "@/stores/auth-store";
 import { profileService } from "@/lib/supabase/services/profile.service";
+import { settingsService } from "@/lib/supabase/services/settings.service";
 import { useState, useEffect } from "react";
 
 const PLATFORM_OPTIONS = [
@@ -58,6 +60,7 @@ const PREDEFINED_TOPIC_IDS = new Set(TOPIC_OPTIONS.map(o => o.id).filter(id => i
 
 export function CreatorProfileClient() {
   const { profile, updateProfile, resetProfile, completionPercentage } = useProfile();
+  const { updateSettings } = useSettings();
   const { user } = useAuthStore();
 
   const [formData, setFormData] = useState(profile || {
@@ -186,10 +189,18 @@ export function CreatorProfileClient() {
 
       console.log("A3 Before upsertProfile()");
       const success = await profileService.upsertProfile(user.id, sanitizedData);
+      
+      if (sanitizedData.displayName) {
+        await settingsService.upsertSettings(user.id, { displayName: sanitizedData.displayName });
+      }
+
       console.log("A4 After upsertProfile()");
       if (success) {
         console.log("A5 updateProfile()");
         updateProfile(sanitizedData);
+        if (sanitizedData.displayName) {
+          updateSettings({ displayName: sanitizedData.displayName });
+        }
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 2000);
       }

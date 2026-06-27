@@ -8,7 +8,7 @@ export const settingsService = {
     // table typing not present in generated types; use escape hatch
     const { data, error } = await supabase
       .from(/* eslint-disable-line @typescript-eslint/no-explicit-any */ "user_settings" as any)
-      .select("theme, density, effects, notifications, ai_provider_order")
+      .select("theme, density, effects, notifications, ai_provider_order, display_name")
       .eq("id", userId)
       .single();
       if (error) {
@@ -22,6 +22,7 @@ export const settingsService = {
         effects?: boolean;
         notifications?: Record<string, boolean>;
         ai_provider_order?: string[];
+        display_name?: string;
       };
 
       const theme = row.theme === "light" || row.theme === "dark" ? (row.theme as "light" | "dark") : "system";
@@ -45,6 +46,7 @@ export const settingsService = {
           defaultModel: "gemini-1.5-flash",
           streaming: true,
         },
+        displayName: row.display_name ?? undefined,
       };
 
       return settings;
@@ -64,6 +66,7 @@ export const settingsService = {
       if (partial.notifications !== undefined) row.notifications = partial.notifications;
       const providerOrder = partial.aiPreferences?.providerOrder;
       if (providerOrder !== undefined) row.ai_provider_order = providerOrder;
+      if (partial.displayName !== undefined) row.display_name = partial.displayName;
 
       const { error } = await supabase.from(/* eslint-disable-line @typescript-eslint/no-explicit-any */ "user_settings" as any).upsert(row as unknown as Record<string, unknown>);
       if (error) console.warn("[settingsService] upsertSettings error", error.message);
@@ -87,6 +90,7 @@ export const settingsService = {
           effects: true,
           notifications: { research: true, trends: true, opportunities: true },
           ai_provider_order: ["gemini", "groq", "openai"],
+          display_name: null,
         };
         const { error } = await supabase.from(/* eslint-disable-line @typescript-eslint/no-explicit-any */ "user_settings" as any).insert(defaultRow as unknown as Record<string, unknown>);
         if (error) console.warn("[settingsService] ensureSettings insert error", error.message);

@@ -12,4 +12,6 @@ export interface UserSettings {
     defaultModel: string;
     streaming: boolean;
   };
+  /** Mirrors profiles.display_name for cross-table availability */
+  displayName?: string;
 }
