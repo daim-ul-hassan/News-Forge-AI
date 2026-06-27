@@ -95,10 +95,34 @@ export class NewsApiProvider implements NewsProvider {
       url.searchParams.set("category", CATEGORY_MAP[category]!);
     }
 
-    const response = await fetch(url.toString(), {
-      headers: { "X-Api-Key": this.apiKey },
-      next: { revalidate: 300 },
-    });
+    let retries = 2;
+    let response: Response | undefined;
+    let lastError: Error | undefined;
+
+    while (retries >= 0) {
+      try {
+        response = await fetch(url.toString(), {
+          headers: { "X-Api-Key": this.apiKey },
+          next: { revalidate: 300 },
+        });
+
+        if (response.ok) break;
+        if (response.status === 429 || response.status >= 500) {
+          throw new Error(`API returned ${response.status}`);
+        } else {
+          break; // Don't retry on 401, 403, etc.
+        }
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        if (retries === 0) break;
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+      retries--;
+    }
+
+    if (!response) {
+      throw lastError ?? new Error("Failed to fetch from News API");
+    }
 
     const payload = (await response.json()) as NewsApiResponse;
 
@@ -106,9 +130,19 @@ export class NewsApiProvider implements NewsProvider {
       throw new Error(payload.message ?? `News API request failed (${response.status})`);
     }
 
+    const seenUrls = new Set<string>();
+    const seenTitles = new Set<string>();
+
     const allArticles = payload.articles
       .map((article, index) => mapArticle(article, index))
-      .filter((a): a is Article => a !== null);
+      .filter((a): a is Article => {
+        if (!a) return false;
+        if (seenUrls.has(a.sourceUrl)) return false;
+        if (seenTitles.has(a.title)) return false;
+        seenUrls.add(a.sourceUrl);
+        seenTitles.add(a.title);
+        return true;
+      });
 
     let filtered = allArticles;
 
