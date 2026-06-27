@@ -51,13 +51,17 @@ const EXPLANATION_STYLE_OPTIONS = [
   { id: "humorous", label: "Humorous & Fun" },
 ];
 
+// Predefined option IDs (excluding "other") used to detect custom user values
+const PREDEFINED_PLATFORM_IDS = new Set(PLATFORM_OPTIONS.map(o => o.id).filter(id => id !== "other"));
+const PREDEFINED_CONTENT_TYPE_IDS = new Set(CONTENT_TYPE_OPTIONS.map(o => o.id).filter(id => id !== "other"));
+const PREDEFINED_TOPIC_IDS = new Set(TOPIC_OPTIONS.map(o => o.id).filter(id => id !== "other"));
+
 export function CreatorProfileClient() {
   const { profile, updateProfile, resetProfile, completionPercentage } = useProfile();
   const { user } = useAuthStore();
 
   const [formData, setFormData] = useState(profile || {
     displayName: "",
-    avatarUrl: "",
     bio: "",
     niche: "",
     primaryPlatform: "",
@@ -94,27 +98,105 @@ export function CreatorProfileClient() {
     : [];
 
   useEffect(() => {
-    if (profile) setFormData(profile);
+    if (!profile) return;
+
+    // --- Load: detect custom (non-predefined) values and restore "Other" state ---
+
+    // Platforms: find any key in the platforms object that is not a predefined id
+    const platformKeys = Object.keys(profile.platforms).filter(
+      k => profile.platforms[k as keyof typeof profile.platforms]?.trim()
+    );
+    const customPlatform = platformKeys.find(k => !PREDEFINED_PLATFORM_IDS.has(k));
+    const rebuiltPlatforms = { ...profile.platforms };
+    if (customPlatform) {
+      setPlatformsOther(customPlatform);
+      // Remove the raw custom key and mark "other" as selected
+      delete (rebuiltPlatforms as Record<string, string>)[customPlatform];
+      (rebuiltPlatforms as Record<string, string>)["other"] = "other";
+    } else {
+      setPlatformsOther("");
+    }
+
+    // Content types: find any value that is not a predefined id
+    const customContentType = (profile.contentTypes || []).find(
+      t => !PREDEFINED_CONTENT_TYPE_IDS.has(t)
+    );
+    const rebuiltContentTypes = (profile.contentTypes || []).map(t =>
+      !PREDEFINED_CONTENT_TYPE_IDS.has(t) ? "other" : t
+    );
+    if (customContentType) {
+      setContentTypesOther(customContentType);
+    } else {
+      setContentTypesOther("");
+    }
+
+    // Topics: find any value that is not a predefined id
+    const customTopic = (profile.topics || []).find(
+      t => !PREDEFINED_TOPIC_IDS.has(t)
+    );
+    const rebuiltTopics = (profile.topics || []).map(t =>
+      !PREDEFINED_TOPIC_IDS.has(t) ? "other" : t
+    );
+    if (customTopic) {
+      setTopicsOther(customTopic);
+    } else {
+      setTopicsOther("");
+    }
+
+    setFormData({
+      ...profile,
+      platforms: rebuiltPlatforms,
+      contentTypes: rebuiltContentTypes,
+      topics: rebuiltTopics,
+    });
   }, [profile]);
 
   const handleSave = async () => {
-    console.log("[1] Save button clicked");
+    console.log("A1 Save button clicked");
     if (!user) return;
-    console.log("[2] Entered handleSave");
+    console.log("A2 Validation passed");
     setIsLoading(true);
     try {
-      console.log("[3] Calling upsertProfile");
-      const success = await profileService.upsertProfile(user.id, formData);
-      console.log("[7] Returning from upsertProfile, success:", success);
+      // --- Save: replace "other" sentinel with actual custom text ---
+
+      // Platforms: if "other" key is present, replace it with the custom text
+      const sanitizedPlatforms = { ...formData.platforms } as Record<string, string>;
+      if (sanitizedPlatforms["other"]) {
+        delete sanitizedPlatforms["other"];
+        const customVal = platformsOther.trim();
+        if (customVal) sanitizedPlatforms[customVal.toLowerCase()] = customVal;
+      }
+
+      // Content types: replace "other" entry with custom text (or drop it if empty)
+      const sanitizedContentTypes = formData.contentTypes
+        .filter(t => t !== "other")
+        .concat(contentTypesOther.trim() ? [contentTypesOther.trim().toLowerCase()] : []);
+
+      // Topics: replace "other" entry with custom text (or drop it if empty)
+      const sanitizedTopics = (formData.topics || [])
+        .filter(t => t !== "other")
+        .concat(topicsOther.trim() ? [topicsOther.trim().toLowerCase()] : []);
+
+      const sanitizedData = {
+        ...formData,
+        platforms: sanitizedPlatforms as typeof formData.platforms,
+        contentTypes: sanitizedContentTypes,
+        topics: sanitizedTopics,
+      };
+
+      console.log("A3 Before upsertProfile()");
+      const success = await profileService.upsertProfile(user.id, sanitizedData);
+      console.log("A4 After upsertProfile()");
       if (success) {
-        updateProfile(formData);
+        console.log("A5 updateProfile()");
+        updateProfile(sanitizedData);
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 2000);
       }
     } catch (err) {
-      console.log("[Error in handleSave]", err);
+      console.error("FAILED HERE", err);
     } finally {
-      console.log("[8] Finally block executed");
+      console.log("A6 finally");
       setIsLoading(false);
     }
   };
@@ -123,7 +205,6 @@ export function CreatorProfileClient() {
     resetProfile();
     setFormData({
       displayName: "",
-      avatarUrl: "",
       bio: "",
       niche: "",
       primaryPlatform: "",
@@ -238,10 +319,7 @@ export function CreatorProfileClient() {
               <label htmlFor="displayName" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Display Name *</label>
               <Input id="displayName" value={formData.displayName} onChange={e => updateField("displayName", e.target.value)} placeholder="Your name" />
             </div>
-            <div className="grid gap-2">
-              <label htmlFor="avatarUrl" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Avatar URL</label>
-              <Input id="avatarUrl" value={formData.avatarUrl} onChange={e => updateField("avatarUrl", e.target.value)} placeholder="https://..." />
-            </div>
+
             <div className="grid gap-2">
               <label htmlFor="bio" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Tell us about yourself ({formData.bio.length}/160)</label>
               <textarea id="bio" value={formData.bio} maxLength={160} onChange={e => updateField("bio", e.target.value)} placeholder="Brief bio or introduction" className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />

@@ -1,6 +1,5 @@
 export interface CreatorProfile {
   displayName: string;
-  avatarUrl: string;
   bio: string;
   niche: string;
   primaryPlatform: string;

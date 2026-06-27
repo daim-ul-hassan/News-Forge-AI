@@ -68,7 +68,7 @@ export const profileService = {
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "display_name, avatar_url, bio, niche, platforms, topics, content_types, writing_styles, completion_percentage",
+          "display_name, bio, niche, platforms, topics, content_types, writing_styles, completion_percentage",
         )
         .eq("id", userId)
         .single();
@@ -80,7 +80,6 @@ export const profileService = {
 
       const row = data as unknown as {
         display_name?: string;
-        avatar_url?: string;
         bio?: string;
         niche?: string;
         platforms?: string[];
@@ -94,7 +93,6 @@ export const profileService = {
 
       const profile: CreatorProfile = {
         displayName: row.display_name || "",
-        avatarUrl: row.avatar_url || "",
         bio: row.bio || "",
         niche: row.niche || "",
         primaryPlatform: (row.platforms && row.platforms[0]) || "",
@@ -117,22 +115,20 @@ export const profileService = {
   },
 
   async upsertProfile(userId: string, partial: Partial<CreatorProfile>) {
-    console.log("[4] Entered upsertProfile");
+    console.log("B1 Entered upsertProfile");
     try {
       const supabase = createClient();
-      // Map partial to DB columns — only include fields that are actually present
+      console.log("B2 Building row");
       const row: Record<string, unknown> = { id: userId };
 
       if (partial.displayName !== undefined)
         row.display_name = partial.displayName;
-      if (partial.avatarUrl !== undefined) row.avatar_url = partial.avatarUrl;
       if (partial.bio !== undefined) row.bio = partial.bio;
       if (partial.niche !== undefined) row.niche = partial.niche;
       if (partial.topics !== undefined) row.topics = partial.topics;
       if (partial.contentTypes !== undefined)
         row.content_types = partial.contentTypes;
 
-      // writing_styles: store comma-separated writingTone as a text[]
       if (partial.writingTone !== undefined) {
         row.writing_styles = partial.writingTone
           ? partial.writingTone
@@ -142,25 +138,27 @@ export const profileService = {
           : [];
       }
 
-      // platforms: convert the platforms object to a text[] of selected keys
       if (partial.platforms !== undefined) {
         row.platforms = platformsObjectToArray(partial.platforms);
       }
 
-      // Compute and persist completion_percentage
       row.completion_percentage = computeCompletion(partial);
 
-      console.log("[5] Before Supabase query");
+      console.log("B3 Before supabase.from()");
+      console.log("ROW", row);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await supabase.from("profiles").upsert(row as any);
-      console.log("[6] After Supabase query, error:", error);
+      const query = supabase.from("profiles").upsert(row as any);
+      console.log("B4 Before await");
+      const { error } = await query;
+      console.log("B5 After await");
       if (error) {
         console.warn("[profileService] upsertProfile error", error.message);
         return false;
       }
+      console.log("B6 Returning");
       return true;
     } catch (err) {
-      console.log("[Error in upsertProfile]", err);
+      console.error("FAILED HERE", err);
       return false;
     }
   },
@@ -207,7 +205,6 @@ export const profileService = {
         const defaultRow = {
           id: userId,
           display_name: "",
-          avatar_url: "",
           bio: "",
           niche: "",
           platforms: [],

@@ -9,7 +9,6 @@ interface ProfileState {
 
 const defaultProfile: CreatorProfile = {
   displayName: "",
-  avatarUrl: "",
   bio: "",
   niche: "",
   primaryPlatform: "",

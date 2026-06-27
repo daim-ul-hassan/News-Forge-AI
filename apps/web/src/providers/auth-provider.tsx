@@ -50,40 +50,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const user = session?.user ?? null;
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Wrap in setTimeout to prevent Supabase onAuthStateChange deadlock
+      setTimeout(async () => {
+        const user = session?.user ?? null;
 
-      // Always reset profile before hydrating the new user's data.
-      // This prevents User A's profile from being visible to User B
-      // during the async Supabase fetch.
-      useProfileStore.getState().resetProfile();
-
-      setUser(user);
-
-      if (user) {
-        try {
-          await Promise.all([
-            profileService.ensureProfile(user.id),
-            settingsService.ensureSettings(user.id),
-            subscriptionsService.ensureSubscription(user.id),
-          ]);
-
-          const [profile, settings] = await Promise.all([
-            profileService.getProfile(user.id),
-            settingsService.getSettings(user.id),
-            subscriptionsService.getSubscription(user.id),
-          ]);
-
-          if (profile) useProfileStore.getState().updateProfile(profile);
-          if (settings) useSettingsStore.getState().updateSettings(settings as UserSettings);
-        } catch (err) {
-          console.warn("[AuthProvider] Hydration failed", err);
-        }
-      } else {
-        // Clear profile and settings on sign out
+        // Always reset profile before hydrating the new user's data.
+        // This prevents User A's profile from being visible to User B
+        // during the async Supabase fetch.
         useProfileStore.getState().resetProfile();
-        useSettingsStore.getState().resetSettings();
-      }
+
+        setUser(user);
+
+        if (user) {
+          try {
+            await Promise.all([
+              profileService.ensureProfile(user.id),
+              settingsService.ensureSettings(user.id),
+              subscriptionsService.ensureSubscription(user.id),
+            ]);
+
+            const [profile, settings] = await Promise.all([
+              profileService.getProfile(user.id),
+              settingsService.getSettings(user.id),
+              subscriptionsService.getSubscription(user.id),
+            ]);
+
+            if (profile) useProfileStore.getState().updateProfile(profile);
+            if (settings) useSettingsStore.getState().updateSettings(settings as UserSettings);
+          } catch (err) {
+            console.warn("[AuthProvider] Hydration failed", err);
+          }
+        } else {
+          // Clear profile and settings on sign out
+          useProfileStore.getState().resetProfile();
+          useSettingsStore.getState().resetSettings();
+        }
+      }, 0);
     });
 
     return () => {

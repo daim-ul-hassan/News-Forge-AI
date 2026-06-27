@@ -14,7 +14,6 @@ export interface Database {
           id: string;
           email: string;
           full_name: string | null;
-          avatar_url: string | null;
           display_name: string | null;
           bio: string | null;
           niche: string | null;
@@ -29,7 +28,6 @@ export interface Database {
           id: string;
           email?: string;
           full_name?: string | null;
-          avatar_url?: string | null;
           display_name?: string | null;
           bio?: string | null;
           niche?: string | null;
@@ -44,7 +42,6 @@ export interface Database {
           id?: string;
           email?: string;
           full_name?: string | null;
-          avatar_url?: string | null;
           display_name?: string | null;
           bio?: string | null;
           niche?: string | null;
