@@ -1,12 +1,12 @@
 "use client";
 
-import { Check, ChevronDown, Clock, FileText, PenLine, Plus, Save, Trash2 } from "lucide-react";
+import { Check, ChevronDown, Clock, FileText, PenLine, Plus, Save, Trash2, Search } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { LoadingState } from "@/components/feedback/loading-state";
 import { PageHeader } from "@/components/feedback/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useDraftsStore } from "@/stores/drafts-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { cn } from "@/lib/utils";
@@ -27,10 +27,15 @@ function formatDate(iso: string) {
 }
 
 export default function ContentStudioPage() {
-  const { drafts, activeDraftId, lastSavedAt, syncReady, createDraft, updateDraft, deleteDraft, setActiveDraft, activeDraft } =
-    useDraftsStore();
+  const { 
+    drafts, activeDraftId, lastSavedAt, syncReady, 
+    createDraft, updateDraft, deleteDraft, setActiveDraft, activeDraft,
+    searchQuery, sortOrder, filterStatus, filterFormat, recentIds,
+    setSearch, setSortOrder, setFilterStatus, setFilterFormat, filteredDrafts
+  } = useDraftsStore();
 
   const draft = activeDraft();
+  const displayed = filteredDrafts();
   const user = useAuthStore((s) => s.user);
   const isLoading = !!user && !syncReady;
 
@@ -133,48 +138,151 @@ export default function ContentStudioPage() {
         </form>
       )}
 
+      {/* Stats row */}
+      {!isLoading && (
+        <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="rounded-lg border border-border/60 bg-card/40 p-4">
+            <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">Total Drafts</h3>
+            <p className="text-2xl font-semibold">{drafts.length}</p>
+          </div>
+          <div className="rounded-lg border border-border/60 bg-card/40 p-4">
+            <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">Total Words</h3>
+            <p className="text-2xl font-semibold">{drafts.reduce((sum, d) => sum + d.wordCount, 0)}</p>
+          </div>
+          <div className="rounded-lg border border-border/60 bg-card/40 p-4">
+            <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">In Review</h3>
+            <p className="text-2xl font-semibold">{drafts.filter(d => d.status === "in-review").length}</p>
+          </div>
+          <div className="rounded-lg border border-border/60 bg-card/40 p-4">
+            <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">Ready</h3>
+            <p className="text-2xl font-semibold">{drafts.filter(d => d.status === "ready").length}</p>
+          </div>
+        </div>
+      )}
+
       {isLoading ? (
-        <div className="mt-8">
-          <LoadingState rows={3} />
+        <div className="mt-6 grid gap-6 lg:grid-cols-[260px_1fr]">
+          <div className="space-y-3">
+            <Skeleton className="h-16 w-full rounded-lg" />
+            <Skeleton className="h-16 w-full rounded-lg" />
+            <Skeleton className="h-16 w-full rounded-lg" />
+          </div>
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-full rounded-lg" />
+            <Skeleton className="h-96 w-full rounded-lg" />
+          </div>
         </div>
       ) : (
         <div className="mt-6 grid gap-6 lg:grid-cols-[260px_1fr]">
           {/* Drafts list */}
-        <div className="space-y-2">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
-            Drafts ({drafts.length})
-          </h2>
-          {drafts.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-border p-6 text-center">
-              <FileText className="mx-auto mb-2 h-6 w-6 text-muted-foreground" />
-              <p className="text-xs text-muted-foreground">No drafts yet. Create one to get started.</p>
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+              <Input
+                placeholder="Search drafts…"
+                value={searchQuery}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 bg-muted/30 border-border/60"
+                aria-label="Search drafts"
+              />
             </div>
-          ) : (
-            drafts.map((d) => (
-              <button
-                key={d.id}
-                onClick={() => setActiveDraft(d.id)}
-                className={cn(
-                  "w-full rounded-lg border p-3 text-left transition-colors",
-                  activeDraftId === d.id
-                    ? "border-primary/40 bg-primary/5"
-                    : "border-border/60 bg-card/40 hover:border-border hover:bg-card/70",
-                )}
-                aria-label={`Open draft: ${d.title}`}
+            <div className="flex gap-2">
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest" | "alphabetical")}
+                className="w-full rounded-md border border-border/60 bg-muted/30 px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                aria-label="Sort drafts"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <span className="text-xs font-medium leading-snug line-clamp-2">{d.title}</span>
-                  <span className={cn("shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide", STATUS_LABELS[d.status].color)}>
-                    {STATUS_LABELS[d.status].label}
-                  </span>
-                </div>
-                <div className="mt-2 flex items-center gap-2 text-[10px] text-muted-foreground">
-                  <span className="capitalize">{d.format}</span>
-                  <span>·</span>
-                  <span>{d.wordCount} words</span>
-                </div>
-              </button>
-            ))
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="alphabetical">A-Z</option>
+              </select>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value as "all" | DraftStatus)}
+                className="w-full rounded-md border border-border/60 bg-muted/30 px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                aria-label="Filter status"
+              >
+                <option value="all">All Status</option>
+                <option value="draft">Draft</option>
+                <option value="in-review">In Review</option>
+                <option value="ready">Ready</option>
+              </select>
+              <select
+                value={filterFormat}
+                onChange={(e) => setFilterFormat(e.target.value as "all" | DraftFormat)}
+                className="w-full rounded-md border border-border/60 bg-muted/30 px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                aria-label="Filter format"
+              >
+                <option value="all">All Formats</option>
+                {FORMATS.map(f => <option key={f} value={f} className="capitalize">{f}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
+              Drafts ({displayed.length})
+            </h2>
+            {displayed.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-border p-6 text-center">
+                <FileText className="mx-auto mb-2 h-6 w-6 text-muted-foreground" />
+                <p className="text-xs text-muted-foreground">No drafts found.</p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+                {displayed.map((d) => (
+                  <button
+                    key={d.id}
+                    onClick={() => setActiveDraft(d.id)}
+                    className={cn(
+                      "w-full rounded-lg border p-3 text-left transition-colors",
+                      activeDraftId === d.id
+                        ? "border-primary/40 bg-primary/5"
+                        : "border-border/60 bg-card/40 hover:border-border hover:bg-card/70",
+                    )}
+                    aria-label={`Open draft: ${d.title}`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-xs font-medium leading-snug line-clamp-2">{d.title || "Untitled"}</span>
+                      <span className={cn("shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide", STATUS_LABELS[d.status].color)}>
+                        {STATUS_LABELS[d.status].label}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex items-center gap-2 text-[10px] text-muted-foreground">
+                      <span className="capitalize">{d.format}</span>
+                      <span>·</span>
+                      <span>{d.wordCount} words</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {recentIds.length > 0 && (
+            <div className="space-y-2">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1 flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5" /> Recently Edited
+              </h2>
+              <div className="space-y-1.5">
+                {recentIds.map(id => {
+                  const d = drafts.find(n => n.id === id);
+                  if (!d) return null;
+                  return (
+                    <button
+                      key={d.id}
+                      onClick={() => setActiveDraft(d.id)}
+                      className="w-full rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-muted/50 text-muted-foreground"
+                    >
+                      <span className="block truncate font-medium text-foreground">{d.title || "Untitled"}</span>
+                      <span className="mt-0.5 block truncate text-[10px]">Updated {formatDate(d.updatedAt)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           )}
         </div>
 
