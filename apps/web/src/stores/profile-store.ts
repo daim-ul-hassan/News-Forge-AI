@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import type { CreatorProfile } from "@/types/profile.types";
 
 interface ProfileState {
@@ -27,25 +26,18 @@ const defaultProfile: CreatorProfile = {
   topics: [],
 };
 
-export const useProfileStore = create<ProfileState>()(
-  persist(
-    (set) => ({
-      profile: null,
-      updateProfile: (partial) =>
-        set((state) => ({
-          profile: {
-            ...(state.profile || defaultProfile),
-            ...partial,
-            platforms: {
-              ...(state.profile?.platforms || defaultProfile.platforms),
-              ...(partial.platforms || {}),
-            },
-          },
-        })),
-      resetProfile: () => set({ profile: null }),
-    }),
-    {
-      name: "nf-creator-profile",
-    },
-  ),
-);
+export const useProfileStore = create<ProfileState>()((set) => ({
+  profile: null,
+  updateProfile: (partial) =>
+    set((state) => ({
+      profile: {
+        ...(state.profile || defaultProfile),
+        ...partial,
+        platforms: {
+          ...(state.profile?.platforms || defaultProfile.platforms),
+          ...(partial.platforms || {}),
+        },
+      },
+    })),
+  resetProfile: () => set({ profile: null }),
+}));

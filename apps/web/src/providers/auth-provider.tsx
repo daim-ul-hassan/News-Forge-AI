@@ -12,16 +12,20 @@ import type { UserSettings } from "@/types/settings.types";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const setUser = useAuthStore((state) => state.setUser);
-  
+
   useEffect(() => {
     const supabase = createClient();
 
     // Check active session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       const user = session?.user ?? null;
+
+      // Always reset profile before setting user so no stale data leaks
+      // into the new session while Supabase fetch is in flight.
+      useProfileStore.getState().resetProfile();
+
       setUser(user);
       if (user) {
-        // Ensure DB rows exist and hydrate stores
         try {
           await Promise.all([
             profileService.ensureProfile(user.id),
@@ -29,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             subscriptionsService.ensureSubscription(user.id),
           ]);
 
-          const [profile, settings, _subscription] = await Promise.all([
+          const [profile, settings] = await Promise.all([
             profileService.getProfile(user.id),
             settingsService.getSettings(user.id),
             subscriptionsService.getSubscription(user.id),
@@ -37,7 +41,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           if (profile) useProfileStore.getState().updateProfile(profile);
           if (settings) useSettingsStore.getState().updateSettings(settings as UserSettings);
-          // subscription can be used by components via API call when needed
         } catch (err) {
           console.warn("[AuthProvider] Hydration failed", err);
         }
@@ -49,6 +52,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const user = session?.user ?? null;
+
+      // Always reset profile before hydrating the new user's data.
+      // This prevents User A's profile from being visible to User B
+      // during the async Supabase fetch.
+      useProfileStore.getState().resetProfile();
+
       setUser(user);
 
       if (user) {
@@ -59,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             subscriptionsService.ensureSubscription(user.id),
           ]);
 
-          const [profile, settings, _subscription] = await Promise.all([
+          const [profile, settings] = await Promise.all([
             profileService.getProfile(user.id),
             settingsService.getSettings(user.id),
             subscriptionsService.getSubscription(user.id),
@@ -71,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.warn("[AuthProvider] Hydration failed", err);
         }
       } else {
-        // clear profile/settings on sign out
+        // Clear profile and settings on sign out
         useProfileStore.getState().resetProfile();
         useSettingsStore.getState().resetSettings();
       }

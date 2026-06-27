@@ -78,8 +78,7 @@ export const settingsService = {
   async ensureSettings(userId: string) {
     try {
       const supabase = createClient();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await supabase.from(/* eslint-disable-line @typescript-eslint/no-explicit-any */ "user_settings" as any).select("id").eq("id", userId).single();
+      const { data } = await supabase.from("user_settings" as any).select("id").eq("id", userId).single(); // eslint-disable-line @typescript-eslint/no-explicit-any
       if (!data) {
         const defaultRow = {
           id: userId,

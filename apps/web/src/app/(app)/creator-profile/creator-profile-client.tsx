@@ -7,8 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 
 import { useProfile } from "@/hooks/use-profile";
-import { createClient } from "@/lib/supabase/client";
-import { profileService } from "@/lib/supabase/services/profile.service";
 import { useState, useEffect } from "react";
 
 const PLATFORM_OPTIONS = [
@@ -96,34 +94,18 @@ export function CreatorProfileClient() {
     if (profile) setFormData(profile);
   }, [profile]);
 
-  const handleSave = async () => {
-    console.log("[save-trace] 1. Enter handleSave");
+  const handleSave = () => {
     setIsLoading(true);
     try {
-      console.log("[save-trace] 2. Calling updateProfile");
-      // Update local store immediately
+      // Update the Zustand store — useProfileSync subscription persists to Supabase.
+      // Do NOT call upsertProfile directly here; that causes a concurrent double-write
+      // which makes the Supabase client hang and setIsLoading(false) never executes.
       updateProfile(formData);
-
-      console.log("[save-trace] 3. Creating supabase client");
-      // Persist to Supabase when signed in
-      // upsertProfile now handles completion_percentage computation internally
-      const supabase = createClient();
-      console.log("[save-trace] 4. Getting user");
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log("[save-trace] 5. Got user:", user?.id);
-      if (user) {
-        console.log("[save-trace] 6. Calling upsertProfile");
-        await profileService.upsertProfile(user.id, { ...formData });
-        console.log("[save-trace] 7. upsertProfile complete");
-      }
-
-      console.log("[save-trace] 8. Setting success state");
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 2000);
-    } catch (err) {
-      console.warn("Failed to save profile to Supabase", err);
+    } catch {
+      // no-op: updateProfile is synchronous and should not throw
     } finally {
-      console.log("[save-trace] 9. Finally block");
       setIsLoading(false);
     }
   };

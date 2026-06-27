@@ -9,14 +9,22 @@ export function useProfileSync() {
   const user = useAuthStore((s) => s.user);
   const updateProfile = useProfileStore((s) => s.updateProfile);
   const resetProfile = useProfileStore((s) => s.resetProfile);
+  // readyRef gates the subscription so it only persists changes made AFTER
+  // the initial hydration fetch completes.
   const readyRef = useRef(false);
 
+  // Hydrate profile from Supabase whenever the authenticated user changes.
   useEffect(() => {
     if (!user) {
       readyRef.current = false;
       resetProfile();
       return;
     }
+
+    // Always reset first to guarantee no stale data from a previous user
+    // bleeds into the new session before Supabase responds.
+    readyRef.current = false;
+    resetProfile();
 
     let cancelled = false;
     profileService
@@ -26,8 +34,7 @@ export function useProfileSync() {
         if (p) updateProfile(p);
         readyRef.current = true;
       })
-      .catch((err) => {
-        console.warn("[profile-sync] failed to load profile", err);
+      .catch(() => {
         if (!cancelled) {
           readyRef.current = true;
         }
@@ -39,23 +46,16 @@ export function useProfileSync() {
     };
   }, [user, updateProfile, resetProfile]);
 
+  // Persist profile mutations to Supabase after initial hydration is done.
   useEffect(() => {
     if (!user) return;
 
     return useProfileStore.subscribe((state, prev) => {
-      console.log("[save-trace] useProfileStore subscription fired:", {
-        ready: readyRef.current,
-        profileChanged: state.profile !== prev.profile
-      });
       if (!readyRef.current) return;
       if (state.profile === prev.profile) return;
 
-      console.log("[save-trace] Subscription executing upsertProfile");
-      // Persist changes to Supabase
-      profileService.upsertProfile(user.id, state.profile ?? {}).then((res) => {
-        console.log("[save-trace] Subscription upsertProfile returned:", res);
-      }).catch((err) => {
-        console.warn("[profile-sync] failed to persist profile", err);
+      profileService.upsertProfile(user.id, state.profile ?? {}).catch(() => {
+        // silent — non-critical background persist
       });
     });
   }, [user]);
