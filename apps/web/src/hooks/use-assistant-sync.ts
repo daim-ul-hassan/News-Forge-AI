@@ -51,7 +51,8 @@ export function useAssistantSync() {
       const prevMessages = prev.conversation.messages;
       const nextMessages = state.conversation.messages;
 
-      if (prev.conversation.id !== state.conversation.id && nextMessages.length === 0) {
+      // Handle conversation clear (same ID, 0 messages)
+      if (prev.conversation.id === state.conversation.id && nextMessages.length === 0 && prevMessages.length > 0) {
         assistantService.clearConversation(user.id, prev.conversation.id).catch((err) => {
           const msg = err instanceof Error ? err.message : (err && typeof err === "object" ? (err as { message?: string; details?: string }).message || (err as { message?: string; details?: string }).details || JSON.stringify(err) : String(err));
           console.warn(`[assistant-sync] Failed to clear conversation: ${msg}`);
@@ -59,6 +60,28 @@ export function useAssistantSync() {
         return;
       }
 
+      // If we switched conversations, we should NOT slice based on prevMessages.
+      // We only sync incrementally if the ID is the same!
+      if (prev.conversation.id !== state.conversation.id) {
+        // Just upsert the whole conversation to Supabase if it has messages
+        if (nextMessages.length > 0) {
+          // This ensures the new active conversation becomes the Supabase one
+          for (const message of nextMessages) {
+            assistantService
+              .addMessage(user.id, state.conversation.id, message)
+              .catch((err) => {
+                const msg = err instanceof Error ? err.message : (err && typeof err === "object" ? (err as { message?: string; details?: string }).message || (err as { message?: string; details?: string }).details || JSON.stringify(err) : String(err));
+                console.warn(`[assistant-sync] Failed to sync switched conversation: ${msg}`);
+              });
+          }
+        } else {
+          // If the new active conversation is empty, we don't need to do anything yet.
+          // Wait, if we switch to an empty conversation, we shouldn't wipe Supabase, we should just let it be.
+        }
+        return;
+      }
+
+      // ID is the same, so we can incrementally sync
       if (nextMessages.length > prevMessages.length) {
         const newMessages = nextMessages.slice(prevMessages.length);
         for (const message of newMessages) {
