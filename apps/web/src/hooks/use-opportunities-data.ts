@@ -32,9 +32,8 @@ export function useOpportunitiesData() {
           let ops = data.opportunities;
           if (profile) {
             ops = ops
-              .map((o: Opportunity) => ({ o, score: scoreOpportunityForProfile(o, profile) }))
-              .sort((x: { o: Opportunity; score: number }, y: { o: Opportunity; score: number }) => y.score - x.score)
-              .map((p: { o: Opportunity; score: number }) => p.o);
+              .map((o: Opportunity) => ({ ...o, score: scoreOpportunityForProfile(o, profile) }))
+              .sort((x: Opportunity, y: Opportunity) => y.score - x.score);
           }
           setOpportunities(ops);
         } else {
@@ -59,9 +58,8 @@ export function useOpportunitiesData() {
     if (!profile) return;
     setOpportunities((prev) =>
       prev
-        .map((o: Opportunity) => ({ o, score: scoreOpportunityForProfile(o, profile) }))
-        .sort((x: { o: Opportunity; score: number }, y: { o: Opportunity; score: number }) => y.score - x.score)
-        .map((p: { o: Opportunity; score: number }) => p.o),
+        .map((o: Opportunity) => ({ ...o, score: scoreOpportunityForProfile(o, profile) }))
+        .sort((x: Opportunity, y: Opportunity) => y.score - x.score),
     );
   }, [profile]);
 

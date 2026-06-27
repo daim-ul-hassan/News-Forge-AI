@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAssistantStore, type AssistantSortOrder } from "@/stores/assistant-store";
 import { useAuthStore } from "@/stores/auth-store";
+import { useProfile } from "@/hooks/use-profile";
 import { cn } from "@/lib/utils";
 
 function formatTime(iso: string) {
@@ -38,12 +39,34 @@ export default function AssistantPage() {
     loadConversation, deleteConversation, renameConversation,
     setSearchQuery, setSortOrder, filteredHistory
   } = useAssistantStore();
+  const { profile } = useProfile();
   
   const displayedHistory = filteredHistory();
   const user = useAuthStore((s) => s.user);
   const isLoading = !!user && !syncReady;
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const starterPrompts = (() => {
+    if (!profile) {
+      return [
+        "Brainstorm 5 technology content ideas",
+        "Summarize today's top tech news",
+        "How can I grow my audience as a tech creator?",
+      ];
+    }
+    const prompts: string[] = [];
+    const niche = profile.niche || "technology";
+    const topic = profile.topics?.[0] || "artificial intelligence";
+    const platform = profile.primaryPlatform || "YouTube";
+    const contentType = profile.contentTypes?.[0] || "videos";
+
+    prompts.push(`Brainstorm 5 ${niche} content ideas for ${platform}`);
+    prompts.push(`Write a script outline for a ${platform} video about ${topic}`);
+    prompts.push(`What are trending ${contentType} formats in ${niche}?`);
+
+    return prompts;
+  })();
 
   // Edit title state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -257,6 +280,19 @@ export default function AssistantPage() {
                   <p className="mt-1.5 max-w-sm text-sm text-muted-foreground">
                     Research topics, brainstorm content angles, or explore your news feed with a question.
                   </p>
+                  <div className="mt-6 grid gap-2 sm:grid-cols-3 max-w-lg w-full px-4">
+                    {starterPrompts.map((prompt, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          setInput(prompt);
+                        }}
+                        className="rounded-lg border border-border/60 bg-muted/20 hover:bg-muted/40 p-3 text-left text-xs transition-colors hover:border-primary/40 text-muted-foreground hover:text-foreground"
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               ) : (
                 <>

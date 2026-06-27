@@ -4,6 +4,7 @@ import { useDraftsStore } from "@/stores/drafts-store";
 import { useOpportunitiesStore } from "@/stores/opportunities-store";
 import { useAssistantStore } from "@/stores/assistant-store";
 import { useOpportunitiesData } from "@/hooks/use-opportunities-data";
+import { useProfile } from "@/hooks/use-profile";
 import type { DashboardMetrics, ActivityItem, DashboardInsights } from "@/types/dashboard.types";
 
 export function useDashboard() {
@@ -12,6 +13,7 @@ export function useDashboard() {
   const { savedIds } = useOpportunitiesStore();
   const { conversation } = useAssistantStore();
   const { opportunities, isLoading } = useOpportunitiesData();
+  const { profile } = useProfile();
 
   const metrics: DashboardMetrics = useMemo(() => {
     // Count assistant messages that are from the user, or count all. 
@@ -100,5 +102,27 @@ export function useDashboard() {
     };
   }, [notes, drafts, savedIds.size, recentActivity]);
 
-  return { metrics, recentActivity, insights, isLoading };
+  const recommendedOpportunities = useMemo(() => {
+    // Opportunities hook already returns them sorted by score (which is the personalized score if profile is present)
+    return opportunities.slice(0, 3);
+  }, [opportunities]);
+
+  const personalizedInsights = useMemo(() => {
+    if (!profile) {
+      return {
+        nicheFocus: "Not configured",
+        recommendedTopic: "General Topics",
+        targetPlatform: "All platforms"
+      };
+    }
+    const targetPlatform = profile.primaryPlatform || Object.keys(profile.platforms || {}).find(k => (profile.platforms as Record<string, string>)[k]?.trim()) || "Multi-platform";
+    const recommendedTopic = profile.topics?.[0] || profile.niche || "General tech";
+    return {
+      nicheFocus: profile.niche || "General Focus",
+      recommendedTopic: recommendedTopic.charAt(0).toUpperCase() + recommendedTopic.slice(1),
+      targetPlatform: targetPlatform.charAt(0).toUpperCase() + targetPlatform.slice(1)
+    };
+  }, [profile]);
+
+  return { metrics, recentActivity, insights, recommendedOpportunities, personalizedInsights, isLoading };
 }
