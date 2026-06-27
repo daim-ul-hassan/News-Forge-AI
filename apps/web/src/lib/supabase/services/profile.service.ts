@@ -117,6 +117,7 @@ export const profileService = {
   },
 
   async upsertProfile(userId: string, partial: Partial<CreatorProfile>) {
+    console.log("[4] Entered upsertProfile");
     try {
       const supabase = createClient();
       // Map partial to DB columns — only include fields that are actually present
@@ -149,16 +150,17 @@ export const profileService = {
       // Compute and persist completion_percentage
       row.completion_percentage = computeCompletion(partial);
 
+      console.log("[5] Before Supabase query");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await supabase.from("profiles").upsert(row as any).select();
+      const { error } = await supabase.from("profiles").upsert(row as any);
+      console.log("[6] After Supabase query, error:", error);
       if (error) {
         console.warn("[profileService] upsertProfile error", error.message);
         return false;
       }
-      void data;
       return true;
     } catch (err) {
-      console.warn("[profileService] upsertProfile unexpected error:", err);
+      console.log("[Error in upsertProfile]", err);
       return false;
     }
   },

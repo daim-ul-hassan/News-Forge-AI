@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 
 import { useProfile } from "@/hooks/use-profile";
+import { useAuthStore } from "@/stores/auth-store";
+import { profileService } from "@/lib/supabase/services/profile.service";
 import { useState, useEffect } from "react";
 
 const PLATFORM_OPTIONS = [
@@ -51,6 +53,7 @@ const EXPLANATION_STYLE_OPTIONS = [
 
 export function CreatorProfileClient() {
   const { profile, updateProfile, resetProfile, completionPercentage } = useProfile();
+  const { user } = useAuthStore();
 
   const [formData, setFormData] = useState(profile || {
     displayName: "",
@@ -94,18 +97,24 @@ export function CreatorProfileClient() {
     if (profile) setFormData(profile);
   }, [profile]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    console.log("[1] Save button clicked");
+    if (!user) return;
+    console.log("[2] Entered handleSave");
     setIsLoading(true);
     try {
-      // Update the Zustand store — useProfileSync subscription persists to Supabase.
-      // Do NOT call upsertProfile directly here; that causes a concurrent double-write
-      // which makes the Supabase client hang and setIsLoading(false) never executes.
-      updateProfile(formData);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 2000);
-    } catch {
-      // no-op: updateProfile is synchronous and should not throw
+      console.log("[3] Calling upsertProfile");
+      const success = await profileService.upsertProfile(user.id, formData);
+      console.log("[7] Returning from upsertProfile, success:", success);
+      if (success) {
+        updateProfile(formData);
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 2000);
+      }
+    } catch (err) {
+      console.log("[Error in handleSave]", err);
     } finally {
+      console.log("[8] Finally block executed");
       setIsLoading(false);
     }
   };

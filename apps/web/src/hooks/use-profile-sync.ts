@@ -46,17 +46,4 @@ export function useProfileSync() {
     };
   }, [user, updateProfile, resetProfile]);
 
-  // Persist profile mutations to Supabase after initial hydration is done.
-  useEffect(() => {
-    if (!user) return;
-
-    return useProfileStore.subscribe((state, prev) => {
-      if (!readyRef.current) return;
-      if (state.profile === prev.profile) return;
-
-      profileService.upsertProfile(user.id, state.profile ?? {}).catch(() => {
-        // silent — non-critical background persist
-      });
-    });
-  }, [user]);
 }

@@ -13,6 +13,7 @@ import { useProfile } from "@/hooks/use-profile";
 import { useAuthStore } from "@/stores/auth-store";
 import { useResearchStore } from "@/stores/research-store";
 import { useDraftsStore } from "@/stores/drafts-store";
+import { profileService } from "@/lib/supabase/services/profile.service";
 
 export function SettingsClient() {
   const { settings, updateSettings, clearAllData, density, effectsEnabled, setDensity, setEffectsEnabled } = useSettings();
@@ -36,18 +37,18 @@ export function SettingsClient() {
   }, [profile?.displayName]);
 
   const handleSaveDisplayName = async () => {
-    if (!displayNameEdit.trim()) return;
+    if (!displayNameEdit.trim() || !user) return;
     setIsSaving(true);
     setShowSaved(false);
 
     try {
-      // Simulate async save (updateProfile persists to local store)
-      updateProfile({ displayName: displayNameEdit.trim() });
-      // small delay to show spinner
-      await new Promise((r) => setTimeout(r, 500));
-      setShowSaved(true);
-      // auto-hide after 2s
-      setTimeout(() => setShowSaved(false), 2000);
+      // Explicit single write path to Supabase
+      const success = await profileService.upsertProfile(user.id, { displayName: displayNameEdit.trim() });
+      if (success) {
+        updateProfile({ displayName: displayNameEdit.trim() });
+        setShowSaved(true);
+        setTimeout(() => setShowSaved(false), 2000);
+      }
     } finally {
       setIsSaving(false);
     }
